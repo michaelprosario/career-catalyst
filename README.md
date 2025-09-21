@@ -45,3 +45,9 @@ Your core professional materials are your first impression. Make them count.
 Interviews are your chance to shine. Don’t go in cold.
 
 * **Practice, Practice, Practice:** Rehearse your answers to common interview questions. Think about your elevator pitch and how you will talk about your experience and skills. The more you practice, the more confident you'll feel.
+
+#### Want to learn more about making helpful agents?
+
+Check out the following: 
+https://google.github.io/adk-docs/
+
