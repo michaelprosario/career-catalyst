@@ -22,7 +22,6 @@ def job_search_for_agent(city: str, search_term: str) -> dict:
         "report": markdown_jobs
     }
 
-
 root_agent = Agent(
     name="job_search_agent",
     model="gemini-2.0-flash",
