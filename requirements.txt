@@ -1,2 +1,3 @@
 python-jobspy
 tabulate
+google-adk
