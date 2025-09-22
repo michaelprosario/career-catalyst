@@ -4,10 +4,10 @@ Following clean architecture principles - orchestrates domain logic, depends on 
 """
 from datetime import datetime
 from typing import List, Optional
-from ..domain.interfaces.services import IOpportunityManagementService
-from ..domain.interfaces.repositories import IOpportunityRepository, IUserOpportunityRepository
-from ..domain.entities.opportunity import UserOpportunity, Opportunity
-from ..domain.value_objects.common import ApplicationStatus
+from ...domain.interfaces.services import IOpportunityManagementService
+from ...domain.interfaces.repositories import IOpportunityRepository, IUserOpportunityRepository
+from ...domain.entities.opportunity import UserOpportunity, Opportunity
+from ...domain.value_objects.common import ApplicationStatus
 
 
 class OpportunityManagementService(IOpportunityManagementService):
