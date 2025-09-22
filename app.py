@@ -1,5 +1,5 @@
 """
-Main entry point for the Career Catalyst Flask application.
+Main entry point for the Career Catalyst FastAPI application.
 """
 import asyncio
 import sys
@@ -10,5 +10,5 @@ from src.presentation.app import run_app
 
 
 if __name__ == '__main__':
-    print("Starting Career Catalyst API...")
+    print("Starting Career Catalyst FastAPI...")
     run_app()

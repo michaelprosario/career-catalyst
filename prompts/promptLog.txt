@@ -18,12 +18,10 @@ Implement
 - Implement IOpportunityRepository
 - Write infrastructure
 - Write repository using mongo db provider
-- Implement flask web api for IOpporunityManagementService
+- Implement FastApi web api for IOpporunityManagementService
+- Update docs to remove elements related to flask
 
 ===
-
-Read the following:
-- docs/service_design.md
 
 Implement the following
 - List user opportunities

@@ -49,9 +49,13 @@ class InfrastructureContainer:
             )
         return self._user_opportunity_management_service
     
+    async def get_opportunity_management_service(self) -> UserOpportunityManagementService:
+        """Get opportunity management service (alias for get_user_opportunity_management_service)."""
+        return await self.get_user_opportunity_management_service()
+    
     async def cleanup(self) -> None:
         """Clean up resources."""
-        if self._database:
+        if self._database is not None:
             mongo_connection = MongoDBConnection()
             await mongo_connection.disconnect()
             self._database = None

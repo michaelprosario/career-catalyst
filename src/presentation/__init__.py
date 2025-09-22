@@ -1,3 +1,3 @@
 """
-Presentation layer - Flask web API implementation.
+Presentation layer initialization.
 """

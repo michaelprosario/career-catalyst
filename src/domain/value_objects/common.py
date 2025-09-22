@@ -40,6 +40,14 @@ class Priority(Enum):
     HIGH = 'HIGH'
 
 
+class SalaryPeriod(Enum):
+    HOURLY = 'HOURLY'
+    DAILY = 'DAILY'
+    WEEKLY = 'WEEKLY'
+    MONTHLY = 'MONTHLY'
+    YEARLY = 'YEARLY'
+
+
 @dataclass(frozen=True)
 class SalaryRange:
     """Value object representing salary range information."""

@@ -1,105 +1,117 @@
 """
-Flask application factory and configuration.
-Presentation layer - main Flask app setup.
+FastAPI main application.
+Presentation layer - application setup and configuration.
 """
 import logging
-import os
-from flask import Flask
-from flask_cors import CORS
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-from ..infrastructure.container import cleanup_container
-
-
-def create_app(config_name: str = 'development') -> Flask:
-    """Application factory for creating Flask app."""
-    app = Flask(__name__, 
-                template_folder='templates',
-                static_folder='static')
-    
-    # Load configuration
-    app.config.update({
-        'DEBUG': os.getenv('FLASK_DEBUG', 'True').lower() == 'true',
-        'TESTING': config_name == 'testing',
-        'SECRET_KEY': os.getenv('SECRET_KEY', 'CareerCatalyst123!'),
-        'MONGODB_CONNECTION_STRING': os.getenv('MONGODB_CONNECTION_STRING', 'mongodb://localhost:27017'),
-        'MONGODB_DATABASE_NAME': os.getenv('MONGODB_DATABASE_NAME', 'career_catalyst'),
-    })
-    
-    # Enable CORS
-    CORS(app, origins=["http://localhost:3000", "http://localhost:5000", "http://127.0.0.1:3000"])
-    
-    # Configure logging
-    if not app.config['TESTING']:
-        logging.basicConfig(
-            level=logging.INFO if not app.config['DEBUG'] else logging.DEBUG,
-            format='%(asctime)s %(levelname)s %(name)s: %(message)s'
-        )
-    
-    # Register blueprints
-    from .api.opportunity_controller import user_opportunity_bp
-    from .web_ui_controller import web_ui_bp
-    
-    app.register_blueprint(user_opportunity_bp)
-    app.register_blueprint(web_ui_bp)
-        
-    # Health check endpoint
-    @app.route('/health')
-    def health_check():
-        return {'status': 'healthy', 'service': 'career-catalyst-api'}, 200
-
-    @app.route('/api')
-    def api_info():
-        return {
-            'service': 'Career Catalyst API',
-            'version': '1.0.0',
-            'endpoints': {
-                'health': '/health',
-                'user_opportunities': '/api/user-opportunities',
-                'web_ui': '/',
-                'docs': 'https://github.com/michaelprosario/career-catalyst'
-            }
-        }, 200
-    
-    # Error handlers
-    @app.errorhandler(404)
-    def not_found(error):
-        return {'error': 'Endpoint not found'}, 404
-    
-    @app.errorhandler(405)
-    def method_not_allowed(error):
-        return {'error': 'Method not allowed'}, 405
-    
-    @app.errorhandler(500)
-    def internal_error(error):
-        return {'error': 'Internal server error'}, 500
-    
-    # Cleanup handler
-    @app.teardown_appcontext
-    async def cleanup(error):
-        """Clean up resources when app context tears down."""
-        if error:
-            logging.error(f"App context error: {error}")
-    
-    return app
+from .api import user_opportunity_router
+from ..infrastructure.container import get_container, cleanup_container
 
 
-async def cleanup_app():
-    """Clean up application resources."""
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan management."""
+    # Startup
+    logger.info("Starting Career Catalyst API...")
+    
+    # Initialize database connection
+    container = get_container()
+    try:
+        await container.get_database()
+        logger.info("Database connection established")
+    except Exception as e:
+        logger.error(f"Failed to connect to database: {e}")
+        raise
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down Career Catalyst API...")
     await cleanup_container()
 
 
+def create_app() -> FastAPI:
+    """Create and configure the FastAPI application."""
+    
+    app = FastAPI(
+        title="Career Catalyst API",
+        description="A comprehensive career management system with opportunity tracking, application management, and professional development tools.",
+        version="1.0.0",
+        docs_url="/docs",
+        redoc_url="/redoc",
+        lifespan=lifespan
+    )
+
+    # CORS middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Configure appropriately for production
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # Include routers
+    app.include_router(user_opportunity_router)
+
+    # Health check endpoint
+    @app.get("/health")
+    async def health_check():
+        """Health check endpoint."""
+        return {"status": "healthy", "service": "Career Catalyst API"}
+
+    # Root endpoint
+    @app.get("/")
+    async def root():
+        """Root endpoint with API information."""
+        return {
+            "message": "Welcome to Career Catalyst API",
+            "version": "1.0.0",
+            "documentation": "/docs",
+            "health": "/health"
+        }
+
+    # Global exception handler
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request, exc):
+        """Global exception handler."""
+        logger.error(f"Unhandled exception: {exc}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "message": "Internal server error",
+                "errors": ["An unexpected error occurred"]
+            }
+        )
+
+    return app
+
+
+# Create the app instance
+app = create_app()
+
+
 def run_app():
-    """Run the Flask application."""
-    app = create_app()
+    """Run the FastAPI application using uvicorn."""
+    import uvicorn
     
-    host = os.getenv('FLASK_HOST', '0.0.0.0')
-    port = int(os.getenv('FLASK_PORT', '5000'))
-    debug = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
-    
-    try:
-        app.run(host=host, port=port, debug=debug)
-    except KeyboardInterrupt:
-        print("\nShutting down gracefully...")
-    finally:
-        import asyncio
-        asyncio.run(cleanup_app())
+    uvicorn.run(
+        "src.presentation.app:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )

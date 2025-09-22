@@ -297,3 +297,70 @@ export interface IResumeService extends IGenericService<Resume> {}
 export interface IActionItemService extends IGenericService<ActionItem> {}
 export interface ICoverLetterService extends IGenericService<CoverLetter> {}
 export interface IIntroEmailService extends IGenericService<IntroEmail> {}
+
+## FastAPI Implementation
+
+The Career Catalyst API is implemented using FastAPI with the following endpoints:
+
+### User Opportunities API (`/api/user-opportunities`)
+
+**POST** `/api/user-opportunities/`
+- Create a new user opportunity
+- Request body: `UserOpportunityCreateRequest`
+- Response: `AppResultResponse`
+
+**GET** `/api/user-opportunities/{opportunity_id}`
+- Get a user opportunity by ID
+- Response: `GetDocumentResultResponse<UserOpportunity>`
+
+**PUT** `/api/user-opportunities/{opportunity_id}`
+- Update an existing user opportunity
+- Request body: `UserOpportunityUpdateRequest`
+- Response: `AppResultResponse`
+
+**DELETE** `/api/user-opportunities/{opportunity_id}`
+- Delete a user opportunity
+- Response: `AppResultResponse`
+
+**GET** `/api/user-opportunities/user/{user_id}`
+- Get all opportunities for a specific user
+- Query parameters: `status`, `limit`, `offset`
+- Response: `ListUserOpportunitiesResponse`
+
+**POST** `/api/user-opportunities/search`
+- Search user opportunities based on criteria
+- Request body: `UserOpportunitySearchRequest`
+- Response: `ListUserOpportunitiesResponse`
+
+### Application Structure
+
+The API follows Clean Architecture principles:
+
+- **Domain Layer**: Entities, value objects, and repository interfaces
+- **Application Layer**: Service implementations and use cases
+- **Infrastructure Layer**: MongoDB repositories and database connections
+- **Presentation Layer**: FastAPI controllers, request/response schemas
+
+### Technology Stack
+
+- **FastAPI**: Web framework for the API
+- **Pydantic**: Data validation and serialization
+- **MongoDB**: Document database with Motor (async driver)
+- **Uvicorn**: ASGI server for running the application
+
+### Authentication & Authorization
+
+*Note: Authentication and authorization features are planned for future implementation*
+
+### Error Handling
+
+All endpoints return standardized responses using `AppResult` pattern with:
+- `success`: Boolean indicating operation success
+- `message`: Human-readable message
+- `errors`: Array of error messages (if any)
+
+### API Documentation
+
+Interactive API documentation is available at:
+- Swagger UI: `/docs`
+- ReDoc: `/redoc`
