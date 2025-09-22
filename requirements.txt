@@ -7,3 +7,4 @@ motor>=3.1.0
 pymongo>=4.3.0
 flask[async]>=2.3.0
 flask-cors>=4.0.0
+python-dotenv>=1.0.0

@@ -1,18 +1,37 @@
 // Opportunities page functionality
 
-// Get reference to CareerCatalyst utilities
-const { showAlert, showLoading, apiRequest, validateForm, clearFormValidation, API_BASE_URL, DEFAULT_USER_ID } = window.CareerCatalyst;
-
 // DOM elements
 let addOpportunityModal, editOpportunityModal, viewOpportunityModal;
 let addOpportunityForm, editOpportunityForm;
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize modal references
-    addOpportunityModal = new bootstrap.Modal(document.getElementById('addOpportunityModal'));
-    editOpportunityModal = new bootstrap.Modal(document.getElementById('editOpportunityModal'));
-    viewOpportunityModal = new bootstrap.Modal(document.getElementById('viewOpportunityModal'));
+    // Ensure CareerCatalyst utilities are available
+    if (!window.CareerCatalyst) {
+        console.error('CareerCatalyst utilities not available');
+        return;
+    }
+    
+    // Ensure Bootstrap is available
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap is not loaded');
+        return;
+    }
+    
+    // Initialize modal references only if elements exist
+    const addModalElement = document.getElementById('addOpportunityModal');
+    const editModalElement = document.getElementById('editOpportunityModal');
+    const viewModalElement = document.getElementById('viewOpportunityModal');
+    
+    if (addModalElement) {
+        addOpportunityModal = new bootstrap.Modal(addModalElement);
+    }
+    if (editModalElement) {
+        editOpportunityModal = new bootstrap.Modal(editModalElement);
+    }
+    if (viewModalElement) {
+        viewOpportunityModal = new bootstrap.Modal(viewModalElement);
+    }
     
     addOpportunityForm = document.getElementById('addOpportunityForm');
     editOpportunityForm = document.getElementById('editOpportunityForm');
@@ -39,16 +58,16 @@ async function handleAddOpportunity(e) {
     
     const submitBtn = e.target.querySelector('button[type="submit"]');
     
-    if (!validateForm(addOpportunityForm)) {
+    if (!window.CareerCatalyst.validateForm(addOpportunityForm)) {
         return;
     }
     
-    showLoading(submitBtn);
+    window.CareerCatalyst.showLoading(submitBtn);
     
     try {
         const formData = new FormData(addOpportunityForm);
         const opportunityData = {
-            user_id: DEFAULT_USER_ID,
+            user_id: window.CareerCatalyst.DEFAULT_USER_ID,
             title: formData.get('title'),
             company: formData.get('company'),
             description: formData.get('description'),
@@ -61,29 +80,31 @@ async function handleAddOpportunity(e) {
             requirements: [] // TODO: Add requirements handling
         };
         
-        const response = await apiRequest(`${API_BASE_URL}/`, {
+        const response = await window.CareerCatalyst.apiRequest(`${window.CareerCatalyst.API_BASE_URL}/`, {
             method: 'POST',
             body: JSON.stringify(opportunityData)
         });
         
         if (response.success) {
-            showAlert('Opportunity added successfully!', 'success');
-            addOpportunityModal.hide();
+            window.CareerCatalyst.showAlert('Opportunity added successfully!', 'success');
+            if (addOpportunityModal) {
+                addOpportunityModal.hide();
+            }
             addOpportunityForm.reset();
-            clearFormValidation(addOpportunityForm);
+            window.CareerCatalyst.clearFormValidation(addOpportunityForm);
             
             // Reload the page to show the new opportunity
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
         } else {
-            showAlert(response.error || 'Failed to add opportunity', 'danger');
+            window.CareerCatalyst.showAlert(response.error || 'Failed to add opportunity', 'danger');
         }
     } catch (error) {
         console.error('Error adding opportunity:', error);
-        showAlert('An error occurred while adding the opportunity', 'danger');
+        window.CareerCatalyst.showAlert('An error occurred while adding the opportunity', 'danger');
     } finally {
-        showLoading(submitBtn, false);
+        window.CareerCatalyst.showLoading(submitBtn, false);
     }
 }
 
@@ -93,11 +114,11 @@ async function handleEditOpportunity(e) {
     
     const submitBtn = e.target.querySelector('button[type="submit"]');
     
-    if (!validateForm(editOpportunityForm)) {
+    if (!window.CareerCatalyst.validateForm(editOpportunityForm)) {
         return;
     }
     
-    showLoading(submitBtn);
+    window.CareerCatalyst.showLoading(submitBtn);
     
     try {
         const formData = new FormData(editOpportunityForm);
@@ -115,45 +136,49 @@ async function handleEditOpportunity(e) {
             notes: formData.get('notes') || null
         };
         
-        const response = await apiRequest(`${API_BASE_URL}/${opportunityId}`, {
+        const response = await window.CareerCatalyst.apiRequest(`${window.CareerCatalyst.API_BASE_URL}/${opportunityId}`, {
             method: 'PUT',
             body: JSON.stringify(opportunityData)
         });
         
         if (response.success) {
-            showAlert('Opportunity updated successfully!', 'success');
-            editOpportunityModal.hide();
+            window.CareerCatalyst.showAlert('Opportunity updated successfully!', 'success');
+            if (editOpportunityModal) {
+                editOpportunityModal.hide();
+            }
             
             // Reload the page to show the updated opportunity
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
         } else {
-            showAlert(response.error || 'Failed to update opportunity', 'danger');
+            window.CareerCatalyst.showAlert(response.error || 'Failed to update opportunity', 'danger');
         }
     } catch (error) {
         console.error('Error updating opportunity:', error);
-        showAlert('An error occurred while updating the opportunity', 'danger');
+        window.CareerCatalyst.showAlert('An error occurred while updating the opportunity', 'danger');
     } finally {
-        showLoading(submitBtn, false);
+        window.CareerCatalyst.showLoading(submitBtn, false);
     }
 }
 
 // View opportunity
 async function viewOpportunity(opportunityId) {
     try {
-        const response = await apiRequest(`${API_BASE_URL}/${opportunityId}`);
+        const response = await window.CareerCatalyst.apiRequest(`${window.CareerCatalyst.API_BASE_URL}/${opportunityId}`);
         
         if (response.success) {
             const opportunity = response.user_opportunity;
             displayOpportunityDetails(opportunity);
-            viewOpportunityModal.show();
+            if (viewOpportunityModal) {
+                viewOpportunityModal.show();
+            }
         } else {
-            showAlert('Failed to load opportunity details', 'danger');
+            window.CareerCatalyst.showAlert('Failed to load opportunity details', 'danger');
         }
     } catch (error) {
         console.error('Error viewing opportunity:', error);
-        showAlert('An error occurred while loading the opportunity', 'danger');
+        window.CareerCatalyst.showAlert('An error occurred while loading the opportunity', 'danger');
     }
 }
 
@@ -245,18 +270,20 @@ function displayOpportunityDetails(opportunity) {
 // Edit opportunity
 async function editOpportunity(opportunityId) {
     try {
-        const response = await apiRequest(`${API_BASE_URL}/${opportunityId}`);
+        const response = await window.CareerCatalyst.apiRequest(`${window.CareerCatalyst.API_BASE_URL}/${opportunityId}`);
         
         if (response.success) {
             const opportunity = response.user_opportunity;
             populateEditForm(opportunity);
-            editOpportunityModal.show();
+            if (editOpportunityModal) {
+                editOpportunityModal.show();
+            }
         } else {
-            showAlert('Failed to load opportunity details', 'danger');
+            window.CareerCatalyst.showAlert('Failed to load opportunity details', 'danger');
         }
     } catch (error) {
         console.error('Error loading opportunity for edit:', error);
-        showAlert('An error occurred while loading the opportunity', 'danger');
+        window.CareerCatalyst.showAlert('An error occurred while loading the opportunity', 'danger');
     }
 }
 
@@ -283,12 +310,12 @@ async function deleteOpportunity(opportunityId, opportunityTitle) {
     }
     
     try {
-        const response = await apiRequest(`${API_BASE_URL}/${opportunityId}`, {
+        const response = await window.CareerCatalyst.apiRequest(`${window.CareerCatalyst.API_BASE_URL}/${opportunityId}`, {
             method: 'DELETE'
         });
         
         if (response.success) {
-            showAlert('Opportunity deleted successfully!', 'success');
+            window.CareerCatalyst.showAlert('Opportunity deleted successfully!', 'success');
             
             // Remove the row from the table
             const row = document.querySelector(`tr[data-opportunity-id="${opportunityId}"]`);
@@ -301,11 +328,11 @@ async function deleteOpportunity(opportunityId, opportunityTitle) {
                 }, 1000);
             }
         } else {
-            showAlert(response.error || 'Failed to delete opportunity', 'danger');
+            window.CareerCatalyst.showAlert(response.error || 'Failed to delete opportunity', 'danger');
         }
     } catch (error) {
         console.error('Error deleting opportunity:', error);
-        showAlert('An error occurred while deleting the opportunity', 'danger');
+        window.CareerCatalyst.showAlert('An error occurred while deleting the opportunity', 'danger');
     }
 }
 

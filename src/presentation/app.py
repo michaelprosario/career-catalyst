@@ -20,7 +20,7 @@ def create_app(config_name: str = 'development') -> Flask:
     app.config.update({
         'DEBUG': os.getenv('FLASK_DEBUG', 'True').lower() == 'true',
         'TESTING': config_name == 'testing',
-        'SECRET_KEY': os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production'),
+        'SECRET_KEY': os.getenv('SECRET_KEY', 'CareerCatalyst123!'),
         'MONGODB_CONNECTION_STRING': os.getenv('MONGODB_CONNECTION_STRING', 'mongodb://localhost:27017'),
         'MONGODB_DATABASE_NAME': os.getenv('MONGODB_DATABASE_NAME', 'career_catalyst'),
     })
