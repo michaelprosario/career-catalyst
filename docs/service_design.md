@@ -95,31 +95,15 @@ export interface ActionItem {
   priority: Priority;
   dueDate?: Date;
   completedAt?: Date;
-  relatedOpporunityId?: string;
+  relatedUserOpportunityId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface Opporunity {
-  id: string;
-  title: string;
-  company: string;
-  description: string;
-  requirements: string[];
-  type: OpporunityType;
-  location?: string;
-  isRemote: boolean;
-  salaryRange?: SalaryRange;
-  postedAt: Date;
-  expiresAt?: Date;
-  status: OpporunityStatus;
-  sourceUrl?: string;
-}
-
-export interface UserOpporunity {
+export interface UserOpportunity {
   id: string;
   userId: string;
-  OpporunityId: string;
+  userOpportunityId: string;
   applicationStatus: ApplicationStatus;
   appliedAt?: Date;
   notes?: string;
@@ -132,7 +116,7 @@ export interface UserOpporunity {
 export interface CoverLetter {
   id: string;
   userId: string;
-  OpporunityId?: string;
+  userOpportunityId?: string;
   title: string;
   content: string;
   createdAt: Date;
@@ -146,7 +130,7 @@ export interface IntroEmail {
   subject: string;
   content: string;
   purpose: EmailPurpose;
-  OpporunityId?: string;
+  userOpportunityId?: string;
   sentAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -197,7 +181,7 @@ export enum ActionItemStatus {
   CANCELLED = 'CANCELLED'
 }
 
-export enum OpporunityType {
+export enum UserOpportunityType {
   FULL_TIME = 'FULL_TIME',
   PART_TIME = 'PART_TIME',
   CONTRACT = 'CONTRACT',
@@ -206,7 +190,7 @@ export enum OpporunityType {
   TEMPORARY = 'TEMPORARY'
 }
 
-export enum OpporunityStatus {
+export enum UserOpportunityStatus {
   ACTIVE = 'ACTIVE',
   EXPIRED = 'EXPIRED',
   FILLED = 'FILLED',
@@ -252,10 +236,10 @@ export interface GetDocumentResult<T> extends AppResult
   document?: T
 }
 
-export interface OpporunitySearchCriteria {
+export interface UserOpportunitySearchCriteria {
   keywords?: string;
   location?: string;
-  type?: OpporunityType;
+  type?: UserOpportunityType;
   isRemote?: boolean;
   salaryMin?: number;
   salaryMax?: number;
@@ -267,18 +251,52 @@ export interface OpporunitySearchCriteria {
 
 // Domain Service Interfaces
 
-export interface IOpporunitySearchService {
-  searchOpporunitys(criteria: OpporunitySearchCriteria): Promise<Opporunity[]>;  
-  getOpporunitysByType(type: OpporunityType): Promise<Opporunity[]>;
-  getActiveOpporunitys(): Promise<Opporunity[]>;
+export interface IUserOpportunitySearchService {
 }
 
-export interface IOpporunityManagementService {  
-  addOpportunity(record: UserOpporunity): Promise<AppResult>;
-  updateOpportunity(record: UserOpporunity): Promise<AppResult>;      
-  getOpporunityById(id: string): Promise<GetDocumentResult<Opportunity>>;
-  deleteOpporunityById(id: string): Promise<AppResult>;
+export interface IUserOpportunityManagementService {  
+  addUserOpportunity(record: UserOpportunity): Promise<AppResult>;
+  updateUserOpportunity(record: UserOpportunity): Promise<AppResult>;      
+  getUserOpportunityById(id: string): Promise<GetDocumentResult<UserOpportunity>>;
+  deleteUserOpportunityById(id: string): Promise<AppResult>;
 }
 
 
+export interface ListResult<T> extends AppResult
+{
+    results: T[]
+}
 
+export interface IQueryService
+{  
+  getActionItemsByStatus(userId: string, status: ActionItemStatus): Promise<ListResult<ActionItem>>;
+  getActiveUserOpportunities(): Promise<List<UserOpportunity>>;
+  getActiveUserOpportunities(): Promise<List<UserOpportunity>>;  
+  getGoalsByStatus(userId: string, status: GoalStatus): Promise<ListResult<Interest>>;
+  getInterestsByCategory(userId: string, category: InterestCategory): Promise<ListResult<Interest>>;
+  getOverdueActionItems(userId: string): Promise<ListResult<ActionItem>>;
+  getUserActionItems(userId: string): Promise<ListResult<ActionItem>>;
+  getUserCoverLetters(userId: string): Promise<ListResult<CoverLetter>>;
+  getUserGoals(userId: string): Promise<ListResult<Goal>>;
+  getUserInterests(userId: string): Promise<ListResult<Interest>>;
+  getUserOpportunitiesByApplicationStatus(userId: string, status: ApplicationStatus): Promise<UserList<UserOpportunity>>;
+  getUserOpportunitiesByType(type: UserOpportunityType): Promise<List<UserOpportunity>>;  
+  getUserResumes(userId: string): Promise<ListResult<Resume>>;
+  getUserUserOpportunities(userId: string): Promise<UserList<UserOpportunity>>;
+  searchUserOpportunities(criteria: UserOpportunitySearchCriteria): Promise<List<UserOpportunity>>;    
+}
+
+export interface IGenericService<T>
+{
+  addRecord(record: T): Promise<AppResult>;
+  updateRecord(record: T): Promise<AppResult>;      
+  getRecordById(id: string): Promise<GetDocumentResult<T>>;
+  deleteRecordById(id: string): Promise<AppResult>;    
+}
+
+export interface IInterestService extends IGenericService<Interest> {}
+export interface IGoalService extends IGenericService<Goal> {}
+export interface IResumeService extends IGenericService<Resume> {}
+export interface IActionItemService extends IGenericService<ActionItem> {}
+export interface ICoverLetterService extends IGenericService<CoverLetter> {}
+export interface IIntroEmailService extends IGenericService<IntroEmail> {}

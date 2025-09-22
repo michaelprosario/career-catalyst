@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Optional, List
 
 
-class OpportunityType(Enum):
+class UserOpportunityType(Enum):
     FULL_TIME = 'FULL_TIME'
     PART_TIME = 'PART_TIME'
     CONTRACT = 'CONTRACT'
@@ -16,7 +16,7 @@ class OpportunityType(Enum):
     TEMPORARY = 'TEMPORARY'
 
 
-class OpportunityStatus(Enum):
+class UserOpportunityStatus(Enum):
     ACTIVE = 'ACTIVE'
     EXPIRED = 'EXPIRED'
     FILLED = 'FILLED'

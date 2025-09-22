@@ -3,3 +3,7 @@ tabulate
 google-adk
 pytest>=7.0.0
 pytest-asyncio>=0.21.0
+motor>=3.1.0
+pymongo>=4.3.0
+flask[async]>=2.3.0
+flask-cors>=4.0.0

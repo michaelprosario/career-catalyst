@@ -4,48 +4,48 @@ Following clean architecture principles - abstract contracts for application ser
 """
 from abc import ABC, abstractmethod
 from typing import List
-from ..entities.opportunity import UserOpportunity, Opportunity
-from ..value_objects.common import AppResult, GetDocumentResult, OpportunityType
+from ..entities.opportunity import UserOpportunity
+from ..value_objects.common import AppResult, GetDocumentResult, UserOpportunityType
 
 
-class IOpportunityManagementService(ABC):
-    """Abstract service interface for opportunity management operations."""
+class IUserOpportunityManagementService(ABC):
+    """Abstract service interface for user opportunity management operations."""
     
     @abstractmethod
-    async def add_opportunity(self, record: UserOpportunity) -> AppResult:
+    async def add_user_opportunity(self, record: UserOpportunity) -> AppResult:
         """Add a new user opportunity record."""
         pass
     
     @abstractmethod
-    async def update_opportunity(self, record: UserOpportunity) -> AppResult:
+    async def update_user_opportunity(self, record: UserOpportunity) -> AppResult:
         """Update an existing user opportunity record."""
         pass
     
     @abstractmethod
-    async def get_opportunity_by_id(self, id: str) -> GetDocumentResult:
+    async def get_user_opportunity_by_id(self, id: str) -> GetDocumentResult:
         """Get a user opportunity by its ID."""
         pass
     
     @abstractmethod
-    async def delete_opportunity_by_id(self, id: str) -> AppResult:
+    async def delete_user_opportunity_by_id(self, id: str) -> AppResult:
         """Delete a user opportunity by its ID."""
         pass
 
 
-class IOpportunitySearchService(ABC):
-    """Abstract service interface for opportunity search operations."""
+class IUserOpportunitySearchService(ABC):
+    """Abstract service interface for user opportunity search operations."""
     
     @abstractmethod
-    async def search_opportunities(self, criteria: dict) -> List[Opportunity]:
-        """Search for opportunities based on criteria."""
+    async def search_user_opportunities(self, criteria: dict) -> List[UserOpportunity]:
+        """Search for user opportunities based on criteria."""
         pass
     
     @abstractmethod
-    async def get_opportunities_by_type(self, opportunity_type: OpportunityType) -> List[Opportunity]:
-        """Get opportunities by type."""
+    async def get_user_opportunities_by_type(self, user_opportunity_type: UserOpportunityType) -> List[UserOpportunity]:
+        """Get user opportunities by type."""
         pass
     
     @abstractmethod
-    async def get_active_opportunities(self) -> List[Opportunity]:
-        """Get all active opportunities."""
+    async def get_active_user_opportunities(self) -> List[UserOpportunity]:
+        """Get all active user opportunities."""
         pass
