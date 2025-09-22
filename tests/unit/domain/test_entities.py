@@ -9,7 +9,9 @@ from src.domain.value_objects.common import (
     OpportunityType, 
     OpportunityStatus, 
     ApplicationStatus, 
-    SalaryRange
+    SalaryRange,
+    AppResult,
+    GetDocumentResult
 )
 
 
@@ -290,3 +292,49 @@ class TestUserOpportunity:
         
         assert saved_opportunity.is_applied() is False
         assert applied_opportunity.is_applied() is True
+
+
+class TestAppResult:
+    """Test cases for AppResult value object."""
+    
+    def test_success_result_creation(self):
+        """Test creating a successful AppResult."""
+        result = AppResult.success_result("Operation completed")
+        assert result.success is True
+        assert result.message == "Operation completed"
+        assert result.errors == []
+    
+    def test_failure_result_creation(self):
+        """Test creating a failed AppResult."""
+        result = AppResult.failure_result("Operation failed", ["Error 1", "Error 2"])
+        assert result.success is False
+        assert result.message == "Operation failed"
+        assert result.errors == ["Error 1", "Error 2"]
+    
+    def test_failure_result_without_errors(self):
+        """Test creating a failed AppResult without specific errors."""
+        result = AppResult.failure_result("Operation failed")
+        assert result.success is False
+        assert result.message == "Operation failed"
+        assert result.errors == []
+
+
+class TestGetDocumentResult:
+    """Test cases for GetDocumentResult value object."""
+    
+    def test_success_result_with_document(self):
+        """Test creating a successful GetDocumentResult with document."""
+        document = {"id": "123", "name": "test"}
+        result = GetDocumentResult.success_result(document, "Document found")
+        assert result.success is True
+        assert result.message == "Document found"
+        assert result.document == document
+        assert result.errors == []
+    
+    def test_failure_result_creation(self):
+        """Test creating a failed GetDocumentResult."""
+        result = GetDocumentResult.failure_result("Document not found", ["Not found error"])
+        assert result.success is False
+        assert result.message == "Document not found"
+        assert result.document is None
+        assert result.errors == ["Not found error"]

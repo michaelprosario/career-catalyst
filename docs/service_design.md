@@ -239,75 +239,17 @@ export interface SalaryRange {
   period: 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
 }
 
-// Domain Service Interfaces
-
-export interface IInterestService {
-  getUserInterests(userId: string): Promise<Interest[]>;
-  createInterest(userId: string, interest: Omit<Interest, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Interest>;
-  updateInterest(id: string, updates: Partial<Interest>): Promise<Interest>;
-  deleteInterest(id: string): Promise<void>;
-  getInterestsByCategory(userId: string, category: InterestCategory): Promise<Interest[]>;
+# implement AppResult
+export interface AppResult
+{
+  success: bool;
+  message: string;
+  errors: string[];
 }
 
-export interface IGoalService {
-  getUserGoals(userId: string): Promise<Goal[]>;
-  createGoal(userId: string, goal: Omit<Goal, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Goal>;
-  updateGoal(id: string, updates: Partial<Goal>): Promise<Goal>;
-  deleteGoal(id: string): Promise<void>;
-  getGoalsByStatus(userId: string, status: GoalStatus): Promise<Goal[]>;
-  markGoalComplete(id: string): Promise<Goal>;
-}
-
-export interface IResumeService {
-  getUserResumes(userId: string): Promise<Resume[]>;
-  createResume(userId: string, resume: Omit<Resume, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Resume>;
-  updateResume(id: string, updates: Partial<Resume>): Promise<Resume>;
-  deleteResume(id: string): Promise<void>;
-  getDefaultResume(userId: string): Promise<Resume | null>;
-  setDefaultResume(id: string): Promise<Resume>;
-}
-
-export interface IActionItemService {
-  getUserActionItems(userId: string): Promise<ActionItem[]>;
-  createActionItem(userId: string, actionItem: Omit<ActionItem, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<ActionItem>;
-  updateActionItem(id: string, updates: Partial<ActionItem>): Promise<ActionItem>;
-  deleteActionItem(id: string): Promise<void>;
-  getActionItemsByStatus(userId: string, status: ActionItemStatus): Promise<ActionItem[]>;
-  getOverdueActionItems(userId: string): Promise<ActionItem[]>;
-  markActionItemComplete(id: string): Promise<ActionItem>;
-}
-
-export interface IOpporunitySearchService {
-  searchOpporunitys(criteria: OpporunitySearchCriteria): Promise<Opporunity[]>;
-  getOpporunityById(id: string): Promise<Opporunity | null>;
-  getOpporunitysByType(type: OpporunityType): Promise<Opporunity[]>;
-  getActiveOpporunitys(): Promise<Opporunity[]>;
-}
-
-export interface IOpporunityManagementService {
-  getUserOpporunitys(userId: string): Promise<UserOpporunity[]>;
-  saveOpporunity(userId: string, OpporunityId: string): Promise<UserOpporunity>;
-  applyToOpporunity(userId: string, OpporunityId: string, resumeId: string, coverLetterId?: string): Promise<UserOpporunity>;
-  updateApplicationStatus(userOpporunityId: string, status: ApplicationStatus): Promise<UserOpporunity>;
-  addOpporunityNotes(userOpporunityId: string, notes: string): Promise<UserOpporunity>;
-  getOpporunitysByApplicationStatus(userId: string, status: ApplicationStatus): Promise<UserOpporunity[]>;
-}
-
-export interface ICoverLetterService {
-  getUserCoverLetters(userId: string): Promise<CoverLetter[]>;
-  createCoverLetter(userId: string, coverLetter: Omit<CoverLetter, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<CoverLetter>;
-  updateCoverLetter(id: string, updates: Partial<CoverLetter>): Promise<CoverLetter>;
-  deleteCoverLetter(id: string): Promise<void>;
-  generateCoverLetter(userId: string, OpporunityId: string, resumeId: string): Promise<CoverLetter>;
-}
-
-export interface IIntroEmailService {
-  getUserIntroEmails(userId: string): Promise<IntroEmail[]>;
-  createIntroEmail(userId: string, email: Omit<IntroEmail, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<IntroEmail>;
-  updateIntroEmail(id: string, updates: Partial<IntroEmail>): Promise<IntroEmail>;
-  deleteIntroEmail(id: string): Promise<void>;
-  generateIntroEmail(userId: string, purpose: EmailPurpose, OpporunityId?: string): Promise<IntroEmail>;
-  markEmailAsSent(id: string): Promise<IntroEmail>;
+export interface GetDocumentResult<T> extends AppResult
+{
+  document?: T
 }
 
 export interface OpporunitySearchCriteria {
@@ -321,3 +263,22 @@ export interface OpporunitySearchCriteria {
   limit?: number;
   offset?: number;
 }
+
+
+// Domain Service Interfaces
+
+export interface IOpporunitySearchService {
+  searchOpporunitys(criteria: OpporunitySearchCriteria): Promise<Opporunity[]>;  
+  getOpporunitysByType(type: OpporunityType): Promise<Opporunity[]>;
+  getActiveOpporunitys(): Promise<Opporunity[]>;
+}
+
+export interface IOpporunityManagementService {  
+  addOpportunity(record: UserOpporunity): Promise<AppResult>;
+  updateOpportunity(record: UserOpporunity): Promise<AppResult>;      
+  getOpporunityById(id: string): Promise<GetDocumentResult<Opportunity>>;
+  deleteOpporunityById(id: string): Promise<AppResult>;
+}
+
+
+

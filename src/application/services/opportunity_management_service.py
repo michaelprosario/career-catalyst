@@ -7,7 +7,7 @@ from typing import List, Optional
 from ...domain.interfaces.services import IOpportunityManagementService
 from ...domain.interfaces.repositories import IOpportunityRepository, IUserOpportunityRepository
 from ...domain.entities.opportunity import UserOpportunity, Opportunity
-from ...domain.value_objects.common import ApplicationStatus
+from ...domain.value_objects.common import ApplicationStatus, AppResult, GetDocumentResult
 
 
 class OpportunityManagementService(IOpportunityManagementService):
@@ -134,3 +134,91 @@ class OpportunityManagementService(IOpportunityManagementService):
             raise ValueError("User ID cannot be empty")
         
         return await self._user_opportunity_repo.get_by_user_and_status(user_id, status)
+
+    # IOpportunityManagementService interface implementation
+    async def add_opportunity(self, record: UserOpportunity) -> AppResult:
+        """Add a new user opportunity record."""
+        try:
+            if not record:
+                return AppResult.failure_result("UserOpportunity record cannot be None")
+            
+            # Validate the record
+            if not record.id:
+                return AppResult.failure_result("UserOpportunity ID cannot be empty")
+            if not record.user_id:
+                return AppResult.failure_result("User ID cannot be empty")
+            if not record.opportunity_id:
+                return AppResult.failure_result("Opportunity ID cannot be empty")
+            
+            # Check if opportunity exists
+            opportunity = await self._opportunity_repo.get_by_id(record.opportunity_id)
+            if not opportunity:
+                return AppResult.failure_result(f"Opportunity with ID {record.opportunity_id} not found")
+            
+            # Check if user already has this opportunity
+            existing = await self._user_opportunity_repo.get_by_user_and_opportunity(
+                record.user_id, record.opportunity_id
+            )
+            if existing:
+                return AppResult.failure_result("User has already saved this opportunity")
+            
+            # Save the record
+            await self._user_opportunity_repo.save(record)
+            return AppResult.success_result("User opportunity added successfully")
+            
+        except Exception as e:
+            return AppResult.failure_result(f"Failed to add user opportunity: {str(e)}")
+
+    async def update_opportunity(self, record: UserOpportunity) -> AppResult:
+        """Update an existing user opportunity record."""
+        try:
+            if not record:
+                return AppResult.failure_result("UserOpportunity record cannot be None")
+            
+            if not record.id:
+                return AppResult.failure_result("UserOpportunity ID cannot be empty")
+            
+            # Check if the record exists
+            existing = await self._user_opportunity_repo.get_by_id(record.id)
+            if not existing:
+                return AppResult.failure_result(f"UserOpportunity with ID {record.id} not found")
+            
+            # Update the record
+            await self._user_opportunity_repo.update(record)
+            return AppResult.success_result("User opportunity updated successfully")
+            
+        except Exception as e:
+            return AppResult.failure_result(f"Failed to update user opportunity: {str(e)}")
+
+    async def get_opportunity_by_id(self, id: str) -> GetDocumentResult:
+        """Get a user opportunity by its ID."""
+        try:
+            if not id:
+                return GetDocumentResult.failure_result("ID cannot be empty")
+            
+            record = await self._user_opportunity_repo.get_by_id(id)
+            if not record:
+                return GetDocumentResult.failure_result(f"UserOpportunity with ID {id} not found")
+            
+            return GetDocumentResult.success_result(record, "User opportunity retrieved successfully")
+            
+        except Exception as e:
+            return GetDocumentResult.failure_result(f"Failed to retrieve user opportunity: {str(e)}")
+
+    async def delete_opportunity_by_id(self, id: str) -> AppResult:
+        """Delete a user opportunity by its ID."""
+        try:
+            if not id:
+                return AppResult.failure_result("ID cannot be empty")
+            
+            # Check if the record exists
+            existing = await self._user_opportunity_repo.get_by_id(id)
+            if not existing:
+                return AppResult.failure_result(f"UserOpportunity with ID {id} not found")
+            
+            # Delete the record
+            await self._user_opportunity_repo.delete(id)
+            return AppResult.success_result("User opportunity deleted successfully")
+            
+        except Exception as e:
+            return AppResult.failure_result(f"Failed to delete user opportunity: {str(e)}")
