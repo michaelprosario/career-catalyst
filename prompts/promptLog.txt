@@ -20,4 +20,15 @@ Implement
 - Write repository using mongo db provider
 - Implement flask web api for IOpporunityManagementService
 
+===
+
+Read the following:
+- docs/python_code_architecture.md
+- docs/service_design.md
+
+Implement
+- Implement IOpportunityRepository
+- Write infrastructure
+- Write repository using mongo db provider
+- Implement flask web api for IOpporunityManagementService
 

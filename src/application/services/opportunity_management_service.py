@@ -50,33 +50,7 @@ class UserOpportunityManagementService(IUserOpportunityManagementService):
             user_opportunity.application_status = ApplicationStatus.SAVED
         
         return await self._user_opportunity_repo.save(user_opportunity)
-    
-    async def apply_to_user_opportunity(
-        self, 
-        user_opportunity_id: str, 
-        resume_id: str, 
-        cover_letter_id: Optional[str] = None
-    ) -> UserOpportunity:
-        """Apply to a user opportunity with resume and optional cover letter."""
-        if not user_opportunity_id:
-            raise ValueError("User opportunity ID cannot be empty")
-        if not resume_id:
-            raise ValueError("Resume ID cannot be empty")
         
-        # Get the user opportunity
-        user_opportunity = await self._user_opportunity_repo.get_by_id(user_opportunity_id)
-        if not user_opportunity:
-            raise ValueError("User opportunity not found")
-        
-        # Check if opportunity is still active
-        if not user_opportunity.is_active():
-            raise ValueError("User opportunity is not active or available")
-        
-        # Apply to the opportunity
-        user_opportunity.apply_to_opportunity(resume_id, cover_letter_id)
-        
-        return await self._user_opportunity_repo.update(user_opportunity)
-    
     async def update_application_status(
         self, 
         user_opportunity_id: str, 
@@ -93,45 +67,7 @@ class UserOpportunityManagementService(IUserOpportunityManagementService):
         user_opportunity.update_status(status)
         
         return await self._user_opportunity_repo.update(user_opportunity)
-    
-    async def add_user_opportunity_notes(self, user_opportunity_id: str, notes: str) -> UserOpportunity:
-        """Add notes to a user opportunity."""
-        if not user_opportunity_id:
-            raise ValueError("User opportunity ID cannot be empty")
-        if not notes:
-            raise ValueError("Notes cannot be empty")
-        
-        user_opportunity = await self._user_opportunity_repo.get_by_id(user_opportunity_id)
-        if not user_opportunity:
-            raise ValueError(f"User opportunity with ID {user_opportunity_id} not found")
-        
-        user_opportunity.add_notes(notes)
-        
-        return await self._user_opportunity_repo.update(user_opportunity)
-    
-    async def get_user_opportunities_by_application_status(
-        self, 
-        user_id: str, 
-        status: ApplicationStatus
-    ) -> List[UserOpportunity]:
-        """Get user opportunities filtered by application status."""
-        if not user_id:
-            raise ValueError("User ID cannot be empty")
-        
-        return await self._user_opportunity_repo.get_by_user_and_status(user_id, status)
-    
-    async def search_user_opportunities(self, criteria: dict) -> List[UserOpportunity]:
-        """Search for user opportunities based on criteria."""
-        return await self._user_opportunity_repo.search(criteria)
-    
-    async def get_user_opportunities_by_type(self, user_opportunity_type: UserOpportunityType) -> List[UserOpportunity]:
-        """Get user opportunities by type."""
-        return await self._user_opportunity_repo.get_by_type(user_opportunity_type)
-    
-    async def get_active_user_opportunities(self) -> List[UserOpportunity]:
-        """Get all active user opportunities."""
-        return await self._user_opportunity_repo.get_active_user_opportunities()
-
+           
     # IUserOpportunityManagementService interface implementation
     async def add_user_opportunity(self, record: UserOpportunity) -> AppResult:
         """Add a new user opportunity record."""
