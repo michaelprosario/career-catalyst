@@ -1,3 +1,44 @@
+Based on the interface you've shown, this appears to be a comprehensive career management system with several key use cases. Let me explore each of these functionalities:
+
+## Core Career Management Features
+
+**Personal Development Management:**
+- **Manage My Interests** - Track and organize professional interests, industries of focus, and career preferences to guide decision-making
+- **Manage My Goals** - Set, track, and update short-term and long-term career objectives with progress monitoring
+- **Manage Prompts** - Store and organize interview questions, reflection prompts, or career coaching questions for regular self-assessment
+
+**Professional Portfolio Management:**
+- **Manage Resumes** - Create, store, and customize multiple resume versions for different roles or industries
+- **Manage Action Items** - Track career-related tasks, deadlines, and follow-ups to stay organized
+
+## Job Search & Application Features
+
+**Opportunity Discovery:**
+- **Search for Gig** - Find freelance, contract, or project-based work opportunities
+- **Explore Gig Instance** - Research specific job postings, companies, or projects in detail
+
+**Application Management:**
+- **Manage Gigs** - Track applications, interview stages, and follow-up requirements across multiple opportunities
+
+## Communication & Networking
+
+**Professional Correspondence:**
+- **Write Cover Letter** - Generate customized cover letters for specific applications
+- **Write Intro Email** - Craft networking emails, follow-up messages, or initial outreach communications
+
+## Potential Use Cases for Organizations
+
+This system could serve multiple user types:
+
+- **Individual Job Seekers** - Comprehensive career management and job search organization
+- **Freelancers/Contractors** - Gig tracking and client management
+- **Career Coaches** - Client progress tracking and resource management
+- **HR Departments** - Internal mobility and employee development tracking
+- **Educational Institutions** - Student career services and alumni engagement
+
+The modular design suggests flexibility to adapt to different career stages and professional needs, from entry-level job searching to senior-level career transitions.
+
+
 // Domain Entities
 
 export interface User {
