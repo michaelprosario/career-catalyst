@@ -12,7 +12,9 @@ from ..infrastructure.container import cleanup_container
 
 def create_app(config_name: str = 'development') -> Flask:
     """Application factory for creating Flask app."""
-    app = Flask(__name__)
+    app = Flask(__name__, 
+                template_folder='templates',
+                static_folder='static')
     
     # Load configuration
     app.config.update({
@@ -33,20 +35,27 @@ def create_app(config_name: str = 'development') -> Flask:
             format='%(asctime)s %(levelname)s %(name)s: %(message)s'
         )
     
+    # Register blueprints
+    from .api.opportunity_controller import user_opportunity_bp
+    from .web_ui_controller import web_ui_bp
+    
+    app.register_blueprint(user_opportunity_bp)
+    app.register_blueprint(web_ui_bp)
         
     # Health check endpoint
     @app.route('/health')
     def health_check():
         return {'status': 'healthy', 'service': 'career-catalyst-api'}, 200
-    
-    @app.route('/')
-    def root():
+
+    @app.route('/api')
+    def api_info():
         return {
             'service': 'Career Catalyst API',
             'version': '1.0.0',
             'endpoints': {
                 'health': '/health',
-                'opportunities': '/api/opportunities',
+                'user_opportunities': '/api/user-opportunities',
+                'web_ui': '/',
                 'docs': 'https://github.com/michaelprosario/career-catalyst'
             }
         }, 200

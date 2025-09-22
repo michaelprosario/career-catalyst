@@ -110,10 +110,21 @@ class UserOpportunityResponse:
     """Response schema for user opportunity data."""
     id: str
     user_id: str
-    opportunity_id: str
-    application_status: str
-    created_at: str  # ISO format
-    updated_at: str  # ISO format
+    title: str
+    company: str
+    description: str
+    requirements: List[str]
+    type: str
+    status: str
+    posted_at: str  # ISO format
+    location: Optional[str] = None
+    is_remote: bool = False
+    salary_range: Optional[SalaryRangeResponse] = None
+    expires_at: Optional[str] = None  # ISO format
+    source_url: Optional[str] = None
+    application_status: str = 'SAVED'
+    created_at: str = ''  # ISO format
+    updated_at: str = ''  # ISO format
     applied_at: Optional[str] = None  # ISO format
     notes: Optional[str] = None
     cover_letter_id: Optional[str] = None
@@ -190,10 +201,30 @@ class ResponseSerializer:
     @staticmethod
     def serialize_user_opportunity(user_opportunity) -> UserOpportunityResponse:
         """Convert UserOpportunity entity to response schema."""
+        salary_range = None
+        if user_opportunity.salary_range:
+            salary_range = SalaryRangeResponse(
+                min=user_opportunity.salary_range.min,
+                max=user_opportunity.salary_range.max,
+                currency=user_opportunity.salary_range.currency,
+                period=user_opportunity.salary_range.period
+            )
+        
         return UserOpportunityResponse(
             id=user_opportunity.id,
             user_id=user_opportunity.user_id,
-            opportunity_id=user_opportunity.opportunity_id,
+            title=user_opportunity.title,
+            company=user_opportunity.company,
+            description=user_opportunity.description,
+            requirements=user_opportunity.requirements,
+            type=user_opportunity.type.value,
+            status=user_opportunity.status.value,
+            posted_at=user_opportunity.posted_at.isoformat(),
+            location=user_opportunity.location,
+            is_remote=user_opportunity.is_remote,
+            salary_range=salary_range,
+            expires_at=user_opportunity.expires_at.isoformat() if user_opportunity.expires_at else None,
+            source_url=user_opportunity.source_url,
             application_status=user_opportunity.application_status.value,
             created_at=user_opportunity.created_at.isoformat(),
             updated_at=user_opportunity.updated_at.isoformat(),

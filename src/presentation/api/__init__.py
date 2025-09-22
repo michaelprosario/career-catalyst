@@ -1,6 +1,6 @@
 """
 API controllers for the presentation layer.
 """
-from .opportunity_controller import opportunity_bp
+from .opportunity_controller import user_opportunity_bp
 
-__all__ = ['opportunity_bp']
+__all__ = ['user_opportunity_bp']
