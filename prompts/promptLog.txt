@@ -23,12 +23,13 @@ Implement
 ===
 
 Read the following:
-- docs/python_code_architecture.md
 - docs/service_design.md
 
-Implement
-- Implement IOpportunityRepository
-- Write infrastructure
-- Write repository using mongo db provider
-- Implement flask web api for IOpporunityManagementService
+Implement the following
+- List user opportunities
+- Add user opportunity
+- Update user opportunity
+- Delete user opportunity
+- Make UX using HTML/Javascript/CSS
+- Use Bootstrap UI
 

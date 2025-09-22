@@ -251,9 +251,6 @@ export interface UserOpportunitySearchCriteria {
 
 // Domain Service Interfaces
 
-export interface IUserOpportunitySearchService {
-}
-
 export interface IUserOpportunityManagementService {  
   addUserOpportunity(record: UserOpportunity): Promise<AppResult>;
   updateUserOpportunity(record: UserOpportunity): Promise<AppResult>;      
@@ -279,10 +276,10 @@ export interface IQueryService
   getUserCoverLetters(userId: string): Promise<ListResult<CoverLetter>>;
   getUserGoals(userId: string): Promise<ListResult<Goal>>;
   getUserInterests(userId: string): Promise<ListResult<Interest>>;
-  getUserOpportunitiesByApplicationStatus(userId: string, status: ApplicationStatus): Promise<UserList<UserOpportunity>>;
+  getUserOpportunitiesByApplicationStatus(userId: string, status: ApplicationStatus): Promise<ListResult<UserOpportunity>>;
   getUserOpportunitiesByType(type: UserOpportunityType): Promise<List<UserOpportunity>>;  
   getUserResumes(userId: string): Promise<ListResult<Resume>>;
-  getUserUserOpportunities(userId: string): Promise<UserList<UserOpportunity>>;
+  getUserUserOpportunities(userId: string): Promise<ListResult<UserOpportunity>>;
   searchUserOpportunities(criteria: UserOpportunitySearchCriteria): Promise<List<UserOpportunity>>;    
 }
 

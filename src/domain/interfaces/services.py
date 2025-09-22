@@ -30,22 +30,3 @@ class IUserOpportunityManagementService(ABC):
     async def delete_user_opportunity_by_id(self, id: str) -> AppResult:
         """Delete a user opportunity by its ID."""
         pass
-
-
-class IUserOpportunitySearchService(ABC):
-    """Abstract service interface for user opportunity search operations."""
-    
-    @abstractmethod
-    async def search_user_opportunities(self, criteria: dict) -> List[UserOpportunity]:
-        """Search for user opportunities based on criteria."""
-        pass
-    
-    @abstractmethod
-    async def get_user_opportunities_by_type(self, user_opportunity_type: UserOpportunityType) -> List[UserOpportunity]:
-        """Get user opportunities by type."""
-        pass
-    
-    @abstractmethod
-    async def get_active_user_opportunities(self) -> List[UserOpportunity]:
-        """Get all active user opportunities."""
-        pass
