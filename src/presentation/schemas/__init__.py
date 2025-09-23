@@ -14,20 +14,28 @@ from .schemas import (
     UserOpportunitySearchRequest,
     AppResultResponse,
     GetDocumentResultResponse,
-    ListUserOpportunitiesResponse
+    ListUserOpportunitiesResponse,
+    JobSearchRequest,
+    JobSearchResult,
+    JobSearchResponse,
+    BookmarkJobRequest
 )
 
 __all__ = [
     "ApplicationStatusEnum",
-    "UserOpportunityTypeEnum", 
+    "UserOpportunityTypeEnum",
     "UserOpportunityStatusEnum",
     "SalaryPeriodEnum",
     "SalaryRangeSchema",
     "UserOpportunityCreateRequest",
     "UserOpportunityUpdateRequest",
-    "UserOpportunityResponse", 
+    "UserOpportunityResponse",
     "UserOpportunitySearchRequest",
     "AppResultResponse",
     "GetDocumentResultResponse",
-    "ListUserOpportunitiesResponse"
+    "ListUserOpportunitiesResponse",
+    "JobSearchRequest",
+    "JobSearchResult",
+    "JobSearchResponse",
+    "BookmarkJobRequest"
 ]

@@ -159,3 +159,39 @@ class GetDocumentResultResponse(AppResultResponse):
 class ListUserOpportunitiesResponse(AppResultResponse):
     results: List[UserOpportunityResponse] = Field(default_factory=list, description="List of user opportunities")
     total: Optional[int] = Field(None, description="Total number of results (for pagination)")
+
+
+# Job Search Schemas
+class JobSearchRequest(BaseModel):
+    search_term: str = Field(..., min_length=1, max_length=255, description="Job search keywords")
+    location: str = Field(..., min_length=1, max_length=255, description="Location to search in")
+    results_wanted: int = Field(default=20, ge=1, le=100, description="Number of results to return")
+
+
+class JobSearchResult(BaseModel):
+    title: str = Field(..., description="Job title")
+    company: str = Field(..., description="Company name")
+    location: str = Field(..., description="Job location")
+    job_url: Optional[str] = Field(None, description="URL to the job posting")
+    date_posted: Optional[str] = Field(None, description="Date the job was posted")
+    is_remote: bool = Field(default=False, description="Whether the job is remote")
+    description: Optional[str] = Field(None, description="Job description")
+
+
+class JobSearchResponse(AppResultResponse):
+    results: List[JobSearchResult] = Field(default_factory=list, description="List of job search results")
+    total: int = Field(0, description="Total number of results found")
+    search_term: str = Field("", description="Search term used")
+    location: str = Field("", description="Location searched")
+
+
+# Bookmark Job Schema
+class BookmarkJobRequest(BaseModel):
+    user_id: str = Field(..., min_length=1, description="User ID")
+    job_title: str = Field(..., min_length=1, max_length=255, description="Job title")
+    company: str = Field(..., min_length=1, max_length=255, description="Company name")
+    job_url: Optional[str] = Field(None, description="URL to the original job posting")
+    location: Optional[str] = Field(None, max_length=255, description="Job location")
+    is_remote: bool = Field(default=False, description="Whether the job is remote")
+    description: Optional[str] = Field(None, description="Job description")
+    notes: Optional[str] = Field(None, description="User notes about the opportunity")

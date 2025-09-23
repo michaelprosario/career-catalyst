@@ -2,8 +2,10 @@
 class CareerCatalystApp {
     constructor() {
         this.apiBaseUrl = '/api/user-opportunities';
+        this.jobSearchApiBaseUrl = '/api/job-search';
         this.currentUserId = 'demo-user-123'; // In production, this would come from authentication
         this.opportunities = [];
+        this.jobSearchResults = [];
         this.currentPage = 1;
         this.pageSize = 10;
         this.totalPages = 1;
@@ -23,6 +25,12 @@ class CareerCatalystApp {
         document.getElementById('opportunityForm').addEventListener('submit', (e) => {
             e.preventDefault();
             this.saveOpportunity();
+        });
+
+        // Job search form submission
+        document.getElementById('jobSearchForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.performJobSearch();
         });
 
         // Search functionality
@@ -573,6 +581,222 @@ class CareerCatalystApp {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Job Search Methods
+    async performJobSearch() {
+        const searchTerm = document.getElementById('jobSearchTerm').value.trim();
+        const location = document.getElementById('jobSearchLocation').value.trim();
+        const resultsWanted = parseInt(document.getElementById('jobSearchResults').value);
+
+        if (!searchTerm || !location) {
+            this.showToast('Error', 'Please enter both search term and location', 'error');
+            return;
+        }
+
+        try {
+            this.showJobSearchLoading(true);
+
+            const response = await fetch(`${this.jobSearchApiBaseUrl}/search`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    search_term: searchTerm,
+                    location: location,
+                    results_wanted: resultsWanted
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.jobSearchResults = data.results || [];
+                this.renderJobSearchResults();
+                this.showToast('Success', `Found ${data.total} job opportunities`, 'success');
+            } else {
+                this.showToast('Error', data.message || 'Job search failed', 'error');
+                this.showNoJobResults(true);
+            }
+        } catch (error) {
+            console.error('Job search error:', error);
+            this.showToast('Error', 'Job search failed', 'error');
+            this.showNoJobResults(true);
+        } finally {
+            this.showJobSearchLoading(false);
+        }
+    }
+
+    renderJobSearchResults() {
+        const container = document.getElementById('jobSearchResultsList');
+        const noResults = document.getElementById('noJobResults');
+
+        if (this.jobSearchResults.length === 0) {
+            container.innerHTML = '';
+            noResults.style.display = 'block';
+            return;
+        }
+
+        noResults.style.display = 'none';
+
+        container.innerHTML = this.jobSearchResults.map(job =>
+            this.createJobResultCard(job)).join('');
+    }
+
+    createJobResultCard(job) {
+        const datePosted = job.date_posted ?
+            `<small class="text-muted"><i class="bi bi-calendar me-1"></i>${this.formatJobDate(job.date_posted)}</small>` : '';
+
+        const remoteTag = job.is_remote ?
+            '<span class="badge bg-success me-1">Remote</span>' : '';
+
+        const description = job.description && job.description !== 'nan' ?
+            this.truncateText(job.description, 150) : 'No description available';
+
+        return `
+            <div class="col-md-6">
+                <div class="card job-result-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">${this.escapeHtml(job.title)}</h5>
+                            ${remoteTag}
+                        </div>
+                        <h6 class="card-subtitle mb-2 text-muted">${this.escapeHtml(job.company)}</h6>
+
+                        ${job.location ? `<p class="card-text small mb-1"><i class="bi bi-geo-alt me-1"></i>${this.escapeHtml(job.location)}</p>` : ''}
+                        ${datePosted}
+
+                        <p class="card-text mt-2">${description}</p>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div>
+                                ${job.job_url ? `<a href="${job.job_url}" target="_blank" class="btn btn-sm btn-outline-primary external-link">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>View Job
+                                </a>` : ''}
+                            </div>
+                            <button class="btn btn-sm btn-success bookmark-btn" onclick="app.bookmarkJob('${this.escapeJobData(job)}')">
+                                <i class="bi bi-bookmark-plus me-1"></i>Bookmark
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    escapeJobData(job) {
+        try {
+            const jobData = {
+                title: job.title,
+                company: job.company,
+                location: job.location,
+                job_url: job.job_url,
+                is_remote: job.is_remote,
+                description: job.description && job.description !== 'nan' ? job.description : null
+            };
+
+            // Use encodeURIComponent to handle Unicode characters, then btoa for base64 encoding
+            return btoa(encodeURIComponent(JSON.stringify(jobData)));
+        } catch (error) {
+            console.error('Error encoding job data:', error);
+            // Fallback: use a simplified version without description if encoding fails
+            return btoa(encodeURIComponent(JSON.stringify({
+                title: job.title || 'Unknown Title',
+                company: job.company || 'Unknown Company',
+                location: job.location || '',
+                job_url: job.job_url || null,
+                is_remote: job.is_remote || false,
+                description: null // Skip description if it causes encoding issues
+            })));
+        }
+    }
+
+    async bookmarkJob(encodedJobData) {
+        try {
+            // Decode the base64 and then decode the URI component
+            const job = JSON.parse(decodeURIComponent(atob(encodedJobData)));
+
+            const response = await fetch(`${this.jobSearchApiBaseUrl}/bookmark`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: this.currentUserId,
+                    job_title: job.title,
+                    company: job.company,
+                    job_url: job.job_url,
+                    location: job.location,
+                    is_remote: job.is_remote,
+                    description: job.description,
+                    notes: `Bookmarked from job search on ${new Date().toLocaleDateString()}`
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.showToast('Success', 'Job bookmarked successfully!', 'success');
+                // Refresh opportunities if we're on that tab
+                if (document.getElementById('opportunities-tab').classList.contains('active')) {
+                    this.loadOpportunities();
+                }
+            } else {
+                this.showToast('Error', data.message || 'Failed to bookmark job', 'error');
+            }
+        } catch (error) {
+            console.error('Bookmark error:', error);
+            this.showToast('Error', 'Failed to bookmark job', 'error');
+        }
+    }
+
+    showJobSearchLoading(show) {
+        const loading = document.getElementById('jobSearchLoading');
+        const resultsList = document.getElementById('jobSearchResultsList');
+        const noResults = document.getElementById('noJobResults');
+
+        if (show) {
+            loading.style.display = 'block';
+            resultsList.style.display = 'none';
+            noResults.style.display = 'none';
+        } else {
+            loading.style.display = 'none';
+            resultsList.style.display = 'block';
+        }
+    }
+
+    showNoJobResults(show) {
+        const noResults = document.getElementById('noJobResults');
+        const resultsList = document.getElementById('jobSearchResultsList');
+
+        if (show) {
+            noResults.style.display = 'block';
+            resultsList.style.display = 'none';
+        } else {
+            noResults.style.display = 'none';
+            resultsList.style.display = 'block';
+        }
+    }
+
+    formatJobDate(dateString) {
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        } catch {
+            return dateString;
+        }
+    }
+
+    showJobSearchSection() {
+        // Switch to the job search tab
+        const jobSearchTab = document.getElementById('job-search-tab');
+        const tab = new bootstrap.Tab(jobSearchTab);
+        tab.show();
     }
 }
 
