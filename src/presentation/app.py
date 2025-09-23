@@ -3,10 +3,13 @@ FastAPI main application.
 Presentation layer - application setup and configuration.
 """
 import logging
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -67,8 +70,29 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # Mount static files
+    templates_path = Path(__file__).parent.parent.parent / "templates"
+    if templates_path.exists():
+        app.mount("/static", StaticFiles(directory=str(templates_path)), name="static")
+
     # Include routers
     app.include_router(user_opportunity_router)
+
+    # Frontend route
+    @app.get("/")
+    async def serve_frontend():
+        """Serve the frontend HTML application."""
+        templates_path = Path(__file__).parent.parent.parent / "templates"
+        index_path = templates_path / "index.html"
+        if index_path.exists():
+            return FileResponse(str(index_path))
+        return {
+            "message": "Welcome to Career Catalyst API",
+            "version": "1.0.0",
+            "documentation": "/docs",
+            "health": "/health",
+            "frontend": "Frontend files not found"
+        }
 
     # Health check endpoint
     @app.get("/health")
@@ -76,10 +100,10 @@ def create_app() -> FastAPI:
         """Health check endpoint."""
         return {"status": "healthy", "service": "Career Catalyst API"}
 
-    # Root endpoint
-    @app.get("/")
-    async def root():
-        """Root endpoint with API information."""
+    # API info endpoint
+    @app.get("/api")
+    async def api_info():
+        """API information endpoint."""
         return {
             "message": "Welcome to Career Catalyst API",
             "version": "1.0.0",
@@ -115,7 +139,7 @@ def run_app():
     uvicorn.run(
         "src.presentation.app:app",
         host="0.0.0.0",
-        port=8000,
+        port=8001,
         reload=True,
         log_level="info"
     )
