@@ -8,6 +8,7 @@ class CareerCatalystApp {
         this.pageSize = 10;
         this.totalPages = 1;
         this.currentViewingOpportunity = null;
+        this.currentEditingOpportunity = null;
 
         this.init();
     }
@@ -282,6 +283,7 @@ class CareerCatalystApp {
             const data = await response.json();
 
             if (data.success && data.document) {
+                this.currentEditingOpportunity = data.document;
                 this.populateForm(data.document);
                 const modal = new bootstrap.Modal(document.getElementById('addOpportunityModal'));
                 modal.show();
@@ -329,6 +331,7 @@ class CareerCatalystApp {
         document.getElementById('applicationStatus').value = 'SAVED';
         document.getElementById('salaryCurrency').value = 'USD';
         document.getElementById('salaryPeriod').value = 'YEARLY';
+        this.currentEditingOpportunity = null;
     }
 
     async saveOpportunity() {
@@ -420,8 +423,16 @@ class CareerCatalystApp {
         }
 
         if (id) {
+            // For updates, include the ID and preserve the posted_at from the original opportunity
             formData.id = id;
-            formData.created_at = new Date().toISOString();
+            if (this.currentEditingOpportunity) {
+                formData.posted_at = this.currentEditingOpportunity.posted_at;
+                formData.applied_at = this.currentEditingOpportunity.applied_at;
+            } else {
+                // Fallback if we don't have the original opportunity data
+                formData.posted_at = new Date().toISOString();
+                formData.applied_at = null;
+            }
         }
 
         return formData;

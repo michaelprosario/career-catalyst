@@ -82,7 +82,7 @@ def convert_schema_to_domain_entity(request: UserOpportunityCreateRequest, oppor
     )
 
 
-def convert_schema_to_domain_entity_update(request: UserOpportunityUpdateRequest) -> UserOpportunity:
+def convert_schema_to_domain_entity_update(request: UserOpportunityUpdateRequest, created_at: datetime) -> UserOpportunity:
     """Convert update request schema to domain entity."""
     # Convert salary range if provided
     salary_range = None
@@ -93,7 +93,7 @@ def convert_schema_to_domain_entity_update(request: UserOpportunityUpdateRequest
             currency=request.salary_range.currency,
             period=request.salary_range.period.value
         )
-    
+
     return UserOpportunity(
         id=request.id,
         user_id=request.user_id,
@@ -110,7 +110,7 @@ def convert_schema_to_domain_entity_update(request: UserOpportunityUpdateRequest
         expires_at=request.expires_at,
         source_url=request.source_url,
         application_status=convert_enum_to_domain(request.application_status.value, ApplicationStatus),
-        created_at=request.created_at,
+        created_at=created_at,  # Use the original created_at from existing record
         updated_at=datetime.now(),
         applied_at=request.applied_at,
         notes=request.notes,
@@ -226,19 +226,28 @@ async def update_user_opportunity(
                 message="Path ID does not match request ID",
                 errors=["Path ID and request ID must match"]
             )
-        
-        # Convert request to domain entity
-        domain_entity = convert_schema_to_domain_entity_update(request)
-        
+
+        # First, get the existing opportunity to preserve the created_at value
+        existing_result = await service.get_user_opportunity_by_id(opportunity_id)
+        if not existing_result.success or not existing_result.document:
+            return AppResultResponse(
+                success=False,
+                message="Opportunity not found",
+                errors=["Cannot update non-existent opportunity"]
+            )
+
+        # Convert request to domain entity with the original created_at
+        domain_entity = convert_schema_to_domain_entity_update(request, existing_result.document.created_at)
+
         # Call the service
         result = await service.update_user_opportunity(domain_entity)
-        
+
         return AppResultResponse(
             success=result.success,
             message=result.message,
             errors=result.errors
         )
-        
+
     except Exception as e:
         return AppResultResponse(
             success=False,
