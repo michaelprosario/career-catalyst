@@ -1,0 +1,4 @@
+- create api for the job search service
+- the api should be a POST api
+- create a way to navigate to explore/search items from the job search service
+- We will need a function book mark a job search item into a user opportunity and save it for later
