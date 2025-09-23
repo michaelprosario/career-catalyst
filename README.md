@@ -1,53 +1,251 @@
-# Career-catalyst
+# Career Catalyst FastAPI Application
 
-Here is a bullet-oriented blog post based on the ideas you provided:
+A comprehensive career management system built with FastAPI, featuring opportunity tracking, application management, and professional development tools.
 
-### Your Ultimate Guide to a Successful Job Search
+## 🚀 Quick Start
 
-Searching for a new job can feel like a full-time job in itself. Without a solid strategy, it’s easy to get lost in a sea of applications and feel overwhelmed. But with a little planning and organization, you can transform your job search from a stressful chore into a focused, effective mission.
+### Prerequisites
 
-Here’s a bullet-oriented guide to help you land your dream job.
+- Python 3.8 or higher
+- MongoDB (local or remote instance)
 
-#### 1. Plan Your Search Like a Pro
+### 1. Set Up Virtual Environment
 
-Before you even think about applying, take a step back and lay the groundwork.
+Create and activate a Python virtual environment:
 
-* **Know Your Interests:** What truly excites you? What kind of work do you enjoy doing? Identifying your passions is the first step to finding a job that will keep you engaged and fulfilled.
-* **Define Your Goals:** What do you want to achieve in your next role and in your career? Are you looking for a promotion, a change in industry, or a better work-life balance? Setting clear goals will help you filter opportunities.
-* **Create a Target Company List:** Don’t just apply to every open position. Be deliberate. Research companies that align with your interests and goals.
-    * **Explore their Mission and Values:** Does the company's purpose resonate with you? Do their core values reflect your own? Working for a company whose values you share can lead to greater job satisfaction and a stronger sense of purpose.
+```bash
+# Using venv (recommended)
+python -m venv venv
 
-#### 2. Stay Organized and On Top of It
+# Activate on Linux/macOS
+source venv/bin/activate
 
-A disorganized job search is an inefficient one. Get your system in place from the start.
+# Activate on Windows
+venv\Scripts\activate
+```
 
-* **Track Your Applications:** Create a spreadsheet or use a dedicated app to log every job you apply for. Include the company name, position title, date applied, and the status of your application.
-* **Track Your Action Items:** Your job search has many moving parts. Keep a list of things you need to do, such as updating your portfolio, sending a follow-up email, or researching a company for an interview.
-* **Follow Up:** Make a note to follow up on applications and networking conversations. A polite, timely follow-up can set you apart and show your continued interest.
+### 2. Install Dependencies
 
-#### 3. Network, Network, Network
+```bash
+pip install -r requirements.txt
+```
 
-It's not just about what you know, but who you know. Networking is still one of the most effective ways to find a job.
+### 3. Environment Configuration
 
-* **Engage in Forums and Communities:** Join online groups, forums, or professional organizations related to your target field. Participate in discussions, ask questions, and offer your insights. This is a great way to meet people and learn about new opportunities.
-* **Leverage Friends and Family:** Let your personal network know you're on the job hunt. You might be surprised by who they know or the leads they can provide. A personal recommendation can be a golden ticket.
+Create a `.env` file in the project root with your configuration:
 
-#### 4. Prep Your Core Materials
+```env
+# Database Configuration
+MONGODB_URL=mongodb://localhost:27017
+DATABASE_NAME=career_catalyst
 
-Your core professional materials are your first impression. Make them count.
+# API Configuration
+API_HOST=0.0.0.0
+API_PORT=8000
+DEBUG=True
 
-* **Craft an Awesome Resume:** Your resume should be a compelling, easy-to-read summary of your skills and experience. Tailor it for each job you apply for, highlighting the most relevant accomplishments.
-* **Set Up a Strong Portfolio:** If you're in a creative or technical field, a portfolio is essential. It should showcase your best work and demonstrate your capabilities in a tangible way.
-* **Groom Your LinkedIn Profile:** Your LinkedIn profile is your digital resume. Make sure it's up-to-date, professional, and includes a great headshot. Connect with people in your field and engage with relevant content.
+# Optional: Logging Configuration
+LOG_LEVEL=INFO
+```
 
-#### 5. Practice for Interviews
+### 4. Start the Application
 
-Interviews are your chance to shine. Don’t go in cold.
+From the project root directory:
 
-* **Practice, Practice, Practice:** Rehearse your answers to common interview questions. Think about your elevator pitch and how you will talk about your experience and skills. The more you practice, the more confident you'll feel.
+```bash
+# Option 1: Using the built-in runner
+python -c "from src.presentation.app import run_app; run_app()"
 
-#### Want to learn more about making helpful agents?
+# Option 2: Using uvicorn directly
+uvicorn src.presentation.app:app --host 0.0.0.0 --port 8000 --reload
 
-Check out the following: 
-https://google.github.io/adk-docs/
+# Option 3: Using the main app.py (if available)
+python app.py
+```
 
+The API will be available at:
+- **API Base URL**: http://localhost:8000
+- **Interactive API Docs**: http://localhost:8000/docs
+- **Alternative Docs**: http://localhost:8000/redoc
+- **Health Check**: http://localhost:8000/health
+
+## 📁 Project Structure
+
+```
+src/
+├── presentation/           # FastAPI application layer
+│   ├── app.py             # Main FastAPI application
+│   ├── api/               # API route controllers
+│   │   └── user_opportunity_controller.py
+│   └── schemas/           # Pydantic request/response models
+├── application/           # Business logic layer
+│   └── services/          # Application services
+├── domain/               # Domain entities and business rules
+│   ├── entities/         # Domain entities
+│   ├── interfaces/       # Repository and service interfaces
+│   └── value_objects/    # Domain value objects
+└── infrastructure/       # Data access and external services
+    ├── container.py      # Dependency injection container
+    ├── database.py       # Database configuration
+    └── repositories/     # Data repository implementations
+```
+
+## 🔧 API Endpoints
+
+### Core Endpoints
+
+- `GET /` - Welcome message and API information
+- `GET /health` - Health check endpoint
+- `GET /docs` - Interactive API documentation
+- `GET /redoc` - Alternative API documentation
+
+### User Opportunities Management
+
+- `POST /api/user-opportunities` - Create a new opportunity
+- `GET /api/user-opportunities` - List all opportunities with filtering
+- `GET /api/user-opportunities/{opportunity_id}` - Get specific opportunity
+- `PUT /api/user-opportunities/{opportunity_id}` - Update opportunity
+- `DELETE /api/user-opportunities/{opportunity_id}` - Delete opportunity
+- `POST /api/user-opportunities/search` - Search opportunities with advanced criteria
+
+## 🗄️ Database Setup
+
+The application uses MongoDB for data persistence. Ensure you have MongoDB running:
+
+### Local MongoDB
+```bash
+# Install MongoDB (Ubuntu/Debian)
+sudo apt update
+sudo apt install mongodb
+
+# Start MongoDB service
+sudo systemctl start mongodb
+sudo systemctl enable mongodb
+```
+
+### Docker MongoDB
+```bash
+# Run MongoDB in Docker
+docker run -d --name mongodb -p 27017:27017 mongo:latest
+```
+
+### MongoDB Atlas (Cloud)
+Update your `.env` file with your Atlas connection string:
+```env
+MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/career_catalyst?retryWrites=true&w=majority
+```
+
+## 🧪 Testing
+
+Run the application tests:
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=src
+
+# Run specific test files
+pytest tests/unit/application/
+pytest tests/unit/infrastructure/
+```
+
+## 🛠️ Development
+
+### Code Quality Tools
+
+Install development dependencies:
+```bash
+pip install black isort flake8 mypy
+```
+
+Format and lint code:
+```bash
+# Format code
+black src/
+isort src/
+
+# Lint code
+flake8 src/
+mypy src/
+```
+
+### Hot Reload Development
+
+The application supports hot reload when running with `--reload` flag:
+```bash
+uvicorn src.presentation.app:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Any changes to the Python files will automatically restart the server.
+
+## 📊 Key Features
+
+- **Opportunity Management**: Create, update, and track job opportunities
+- **Application Tracking**: Monitor application status and progress
+- **Search & Filtering**: Advanced search capabilities with multiple criteria
+- **RESTful API**: Clean, well-documented REST endpoints
+- **Data Validation**: Robust request/response validation with Pydantic
+- **Error Handling**: Comprehensive error handling and logging
+- **CORS Support**: Cross-origin resource sharing enabled
+- **Health Monitoring**: Built-in health check endpoints
+
+## 🔍 API Usage Examples
+
+### Create a New Opportunity
+```bash
+curl -X POST "http://localhost:8000/api/user-opportunities" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Senior Software Engineer",
+    "company": "Tech Corp",
+    "location": "San Francisco, CA",
+    "salary_min": 120000,
+    "salary_max": 180000,
+    "opportunity_type": "full_time",
+    "status": "active"
+  }'
+```
+
+### Get All Opportunities
+```bash
+curl "http://localhost:8000/api/user-opportunities"
+```
+
+### Search Opportunities
+```bash
+curl -X POST "http://localhost:8000/api/user-opportunities/search" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Software Engineer",
+    "company": "Tech Corp",
+    "location": "San Francisco"
+  }'
+```
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+1. **Port Already in Use**: Change the port in the uvicorn command or kill the process using port 8000
+2. **Database Connection Failed**: Ensure MongoDB is running and the connection string is correct
+3. **Import Errors**: Make sure you're running from the project root and the virtual environment is activated
+4. **Module Not Found**: Install dependencies with `pip install -r requirements.txt`
+
+### Logs
+
+Check application logs for detailed error information. Logs are configured to show INFO level and above.
+
+## 📝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
+
+## 📄 License
+
+[Add your license information here]

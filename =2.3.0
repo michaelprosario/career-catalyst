@@ -1,0 +1,21 @@
+Collecting flask[async]
+  Using cached flask-3.1.2-py3-none-any.whl.metadata (3.2 kB)
+Collecting blinker>=1.9.0 (from flask[async])
+  Using cached blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+Requirement already satisfied: click>=8.1.3 in /usr/local/python/3.12.1/lib/python3.12/site-packages (from flask[async]) (8.3.0)
+Collecting itsdangerous>=2.2.0 (from flask[async])
+  Using cached itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+Requirement already satisfied: jinja2>=3.1.2 in /home/codespace/.local/lib/python3.12/site-packages (from flask[async]) (3.1.6)
+Requirement already satisfied: markupsafe>=2.1.1 in /home/codespace/.local/lib/python3.12/site-packages (from flask[async]) (3.0.2)
+Collecting werkzeug>=3.1.0 (from flask[async])
+  Using cached werkzeug-3.1.3-py3-none-any.whl.metadata (3.7 kB)
+Collecting asgiref>=3.2 (from flask[async])
+  Downloading asgiref-3.9.1-py3-none-any.whl.metadata (9.3 kB)
+Using cached flask-3.1.2-py3-none-any.whl (103 kB)
+Downloading asgiref-3.9.1-py3-none-any.whl (23 kB)
+Using cached blinker-1.9.0-py3-none-any.whl (8.5 kB)
+Using cached itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+Using cached werkzeug-3.1.3-py3-none-any.whl (224 kB)
+Installing collected packages: werkzeug, itsdangerous, blinker, asgiref, flask
+
+Successfully installed asgiref-3.9.1 blinker-1.9.0 flask-3.1.2 itsdangerous-2.2.0 werkzeug-3.1.3
