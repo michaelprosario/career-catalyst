@@ -33,6 +33,11 @@ class CareerCatalystApp {
             this.performJobSearch();
         });
 
+        // Export jobs button
+        document.getElementById('exportJobsBtn').addEventListener('click', () => {
+            this.exportJobSearchResults();
+        });
+
         // Search functionality
         document.getElementById('searchKeywords').addEventListener('input',
             this.debounce(() => this.searchOpportunities(), 500));
@@ -836,14 +841,17 @@ Best regards,
     renderJobSearchResults() {
         const container = document.getElementById('jobSearchResultsList');
         const noResults = document.getElementById('noJobResults');
+        const exportSection = document.getElementById('exportSection');
 
         if (this.jobSearchResults.length === 0) {
             container.innerHTML = '';
             noResults.style.display = 'block';
+            exportSection.style.display = 'none';
             return;
         }
 
         noResults.style.display = 'none';
+        exportSection.style.display = 'flex';
 
         container.innerHTML = this.jobSearchResults.map(job =>
             this.createJobResultCard(job)).join('');
@@ -1002,6 +1010,89 @@ Best regards,
         const jobSearchTab = document.getElementById('job-search-tab');
         const tab = new bootstrap.Tab(jobSearchTab);
         tab.show();
+    }
+
+    exportJobSearchResults() {
+        if (!this.jobSearchResults || this.jobSearchResults.length === 0) {
+            this.showToast('Error', 'No job search results to export', 'error');
+            return;
+        }
+
+        try {
+            // Generate CSV content
+            const csvContent = this.generateJobSearchCSV();
+
+            // Create download
+            this.downloadCSV(csvContent, 'job-search-results.csv');
+
+            this.showToast('Success', `Exported ${this.jobSearchResults.length} job results to CSV`, 'success');
+        } catch (error) {
+            console.error('Error exporting job search results:', error);
+            this.showToast('Error', 'Failed to export job search results', 'error');
+        }
+    }
+
+    generateJobSearchCSV() {
+        // Define CSV headers
+        const headers = [
+            'Title',
+            'Company',
+            'Location',
+            'Remote',
+            'Date Posted',
+            'Description',
+            'Job URL'
+        ];
+
+        // Convert job data to CSV rows
+        const rows = this.jobSearchResults.map(job => [
+            this.cleanCSVValue(job.title || ''),
+            this.cleanCSVValue(job.company || ''),
+            this.cleanCSVValue(job.location || ''),
+            job.is_remote ? 'Yes' : 'No',
+            job.date_posted || '',
+            this.cleanCSVValue(job.description && job.description !== 'nan' ? job.description : ''),
+            job.job_url || ''
+        ]);
+
+        // Combine headers and rows
+        const allRows = [headers, ...rows];
+
+        // Convert to CSV format
+        return allRows.map(row =>
+            row.map(field => `"${field.replace(/"/g, '""')}"`).join(',')
+        ).join('\n');
+    }
+
+    cleanCSVValue(value) {
+        if (!value || value === 'nan') return '';
+
+        // Remove HTML tags and excessive whitespace
+        return value
+            .replace(/<[^>]*>/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    downloadCSV(csvContent, filename) {
+        // Create blob with CSV content
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+        // Create download link
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+
+        // Add to DOM, click, and remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up object URL
+        URL.revokeObjectURL(url);
     }
 }
 
