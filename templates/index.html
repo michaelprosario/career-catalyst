@@ -101,6 +101,11 @@
                     <i class="bi bi-search me-1"></i>Search Jobs
                 </button>
             </li>
+            <li class="nav-item" role="presentation" style="display: none;" id="opportunity-detail-nav">
+                <button class="nav-link" id="opportunity-detail-tab" data-bs-toggle="tab" data-bs-target="#opportunity-detail" type="button" role="tab">
+                    <i class="bi bi-eye me-1"></i>Opportunity Detail
+                </button>
+            </li>
         </ul>
 
         <!-- Tab Content -->
@@ -252,6 +257,20 @@
                         <h4 class="mt-3">No jobs found</h4>
                         <p>Try adjusting your search terms or location.</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Opportunity Detail Tab -->
+            <div class="tab-pane fade" id="opportunity-detail" role="tabpanel">
+                <div class="d-flex align-items-center mb-3">
+                    <button class="btn btn-outline-secondary me-3" onclick="app.backToOpportunities()">
+                        <i class="bi bi-arrow-left me-1"></i>Back to Opportunities
+                    </button>
+                    <h3 class="mb-0" id="detailOpportunityTitle"></h3>
+                </div>
+
+                <div id="opportunityDetailContent">
+                    <!-- Content will be populated dynamically -->
                 </div>
             </div>
         </div>
