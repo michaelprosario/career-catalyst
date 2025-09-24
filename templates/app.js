@@ -33,6 +33,11 @@ class CareerCatalystApp {
             this.performJobSearch();
         });
 
+        // Export jobs button
+        document.getElementById('exportJobsBtn').addEventListener('click', () => {
+            this.exportJobSearchResults();
+        });
+
         // Search functionality
         document.getElementById('searchKeywords').addEventListener('input',
             this.debounce(() => this.searchOpportunities(), 500));
@@ -214,7 +219,7 @@ class CareerCatalystApp {
 
             if (data.success && data.document) {
                 this.currentViewingOpportunity = data.document;
-                this.showOpportunityDetails(data.document);
+                this.showOpportunityDetailScreen(data.document);
             } else {
                 this.showToast('Error', 'Failed to load opportunity details', 'error');
             }
@@ -276,6 +281,211 @@ class CareerCatalystApp {
         `;
 
         modal.show();
+    }
+
+    showOpportunityDetailScreen(opportunity) {
+        // Show the opportunity detail tab navigation and switch to it
+        document.getElementById('opportunity-detail-nav').style.display = 'block';
+        const detailTab = new bootstrap.Tab(document.getElementById('opportunity-detail-tab'));
+        detailTab.show();
+
+        // Update the title
+        document.getElementById('detailOpportunityTitle').textContent = opportunity.title;
+
+        // Populate the content
+        const content = document.getElementById('opportunityDetailContent');
+        const salaryInfo = this.formatSalaryRange(opportunity.salary_range);
+        const requirements = opportunity.requirements && opportunity.requirements.length > 0
+            ? opportunity.requirements.map(req => `<li>${this.escapeHtml(req)}</li>`).join('')
+            : '<li>No specific requirements listed</li>';
+
+        content.innerHTML = `
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="bi bi-building me-2"></i>Company Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>${this.escapeHtml(opportunity.company)}</h6>
+                            <p class="text-muted mb-0">${opportunity.location ? this.escapeHtml(opportunity.location) : 'Location not specified'}</p>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="bi bi-file-text me-2"></i>Job Description</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>${this.escapeHtml(opportunity.description)}</p>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="bi bi-check2-square me-2"></i>Requirements</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul>${requirements}</ul>
+                        </div>
+                    </div>
+
+                    ${opportunity.notes ? `
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0"><i class="bi bi-sticky me-2"></i>My Notes</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>${this.escapeHtml(opportunity.notes)}</p>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Job Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless">
+                                <tr><td><strong>Type:</strong></td><td>${opportunity.type.replace('_', ' ')}</td></tr>
+                                <tr><td><strong>Status:</strong></td><td><span class="badge ${this.getStatusBadgeClass(opportunity.application_status)}">${opportunity.application_status}</span></td></tr>
+                                <tr><td><strong>Remote:</strong></td><td>${opportunity.is_remote ? 'Yes' : 'No'}</td></tr>
+                                ${salaryInfo ? `<tr><td><strong>Salary:</strong></td><td class="salary-info">${salaryInfo}</td></tr>` : ''}
+                                <tr><td><strong>Posted:</strong></td><td>${this.formatDate(opportunity.posted_at)}</td></tr>
+                                ${opportunity.applied_at ? `<tr><td><strong>Applied:</strong></td><td>${this.formatDate(opportunity.applied_at)}</td></tr>` : ''}
+                                <tr><td><strong>Added:</strong></td><td>${this.formatDate(opportunity.created_at)}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="bi bi-tools me-2"></i>Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" id="draftCoverLetterBtn">
+                                    <i class="bi bi-file-earmark-text me-2"></i>Draft Cover Letter
+                                </button>
+                                <button class="btn btn-outline-primary" id="editOpportunityBtn" data-opportunity-id="${opportunity.id}">
+                                    <i class="bi bi-pencil me-2"></i>Edit Opportunity
+                                </button>
+                                ${opportunity.source_url ? `
+                                    <a href="${opportunity.source_url}" target="_blank" class="btn btn-outline-secondary">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>View Original Posting
+                                    </a>
+                                ` : ''}
+                                <button class="btn btn-outline-danger" id="deleteOpportunityBtn">
+                                    <i class="bi bi-trash me-2"></i>Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Add event listeners after the HTML is inserted
+        setTimeout(() => {
+            const draftBtn = document.getElementById('draftCoverLetterBtn');
+            const editBtn = document.getElementById('editOpportunityBtn');
+            const deleteBtn = document.getElementById('deleteOpportunityBtn');
+
+            if (draftBtn) {
+                draftBtn.addEventListener('click', () => this.draftCoverLetter());
+            }
+
+            if (editBtn) {
+                editBtn.addEventListener('click', () => {
+                    const opportunityId = editBtn.getAttribute('data-opportunity-id');
+                    this.editOpportunityById(opportunityId);
+                });
+            }
+
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => this.deleteOpportunity());
+            }
+        }, 0);
+    }
+
+    backToOpportunities() {
+        // Switch back to the opportunities tab and hide the detail tab
+        const opportunitiesTab = new bootstrap.Tab(document.getElementById('opportunities-tab'));
+        opportunitiesTab.show();
+        document.getElementById('opportunity-detail-nav').style.display = 'none';
+        this.currentViewingOpportunity = null;
+    }
+
+    draftCoverLetter() {
+        if (!this.currentViewingOpportunity) {
+            this.showToast('Error', 'No opportunity selected for cover letter generation', 'error');
+            return;
+        }
+
+        // For now, show a placeholder functionality
+        // In a real implementation, this would integrate with AI/template services
+        const coverLetterContent = `Dear Hiring Manager,
+
+I am writing to express my strong interest in the ${this.currentViewingOpportunity.title} position at ${this.currentViewingOpportunity.company}.
+
+${this.currentViewingOpportunity.description ? 'Based on the job description, I believe my skills and experience align well with your requirements.' : ''}
+
+${this.currentViewingOpportunity.requirements && this.currentViewingOpportunity.requirements.length > 0 ? `I am particularly excited about this opportunity because of my experience with: ${this.currentViewingOpportunity.requirements.slice(0, 3).join(', ')}.` : ''}
+
+I would welcome the opportunity to discuss how my background and enthusiasm can contribute to your team's success.
+
+Thank you for considering my application.
+
+Best regards,
+[Your Name]`;
+
+        // Create a modal to show the cover letter draft
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Cover Letter Draft - ${this.escapeHtml(this.currentViewingOpportunity.title)}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <textarea class="form-control" rows="15" id="coverLetterText">${coverLetterContent}</textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="app.copyCoverLetter()">
+                            <i class="bi bi-clipboard me-1"></i>Copy to Clipboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+
+        // Clean up when modal is closed
+        modal.addEventListener('hidden.bs.modal', () => {
+            document.body.removeChild(modal);
+        });
+
+        this.showToast('Success', 'Cover letter draft generated! You can edit and copy it.', 'success');
+    }
+
+    copyCoverLetter() {
+        const coverLetterText = document.getElementById('coverLetterText');
+        if (coverLetterText) {
+            coverLetterText.select();
+            navigator.clipboard.writeText(coverLetterText.value).then(() => {
+                this.showToast('Success', 'Cover letter copied to clipboard!', 'success');
+            }).catch(() => {
+                this.showToast('Error', 'Failed to copy to clipboard', 'error');
+            });
+        }
     }
 
     editOpportunity() {
@@ -631,14 +841,17 @@ class CareerCatalystApp {
     renderJobSearchResults() {
         const container = document.getElementById('jobSearchResultsList');
         const noResults = document.getElementById('noJobResults');
+        const exportSection = document.getElementById('exportSection');
 
         if (this.jobSearchResults.length === 0) {
             container.innerHTML = '';
             noResults.style.display = 'block';
+            exportSection.style.display = 'none';
             return;
         }
 
         noResults.style.display = 'none';
+        exportSection.style.display = 'flex';
 
         container.innerHTML = this.jobSearchResults.map(job =>
             this.createJobResultCard(job)).join('');
@@ -797,6 +1010,89 @@ class CareerCatalystApp {
         const jobSearchTab = document.getElementById('job-search-tab');
         const tab = new bootstrap.Tab(jobSearchTab);
         tab.show();
+    }
+
+    exportJobSearchResults() {
+        if (!this.jobSearchResults || this.jobSearchResults.length === 0) {
+            this.showToast('Error', 'No job search results to export', 'error');
+            return;
+        }
+
+        try {
+            // Generate CSV content
+            const csvContent = this.generateJobSearchCSV();
+
+            // Create download
+            this.downloadCSV(csvContent, 'job-search-results.csv');
+
+            this.showToast('Success', `Exported ${this.jobSearchResults.length} job results to CSV`, 'success');
+        } catch (error) {
+            console.error('Error exporting job search results:', error);
+            this.showToast('Error', 'Failed to export job search results', 'error');
+        }
+    }
+
+    generateJobSearchCSV() {
+        // Define CSV headers
+        const headers = [
+            'Title',
+            'Company',
+            'Location',
+            'Remote',
+            'Date Posted',
+            'Description',
+            'Job URL'
+        ];
+
+        // Convert job data to CSV rows
+        const rows = this.jobSearchResults.map(job => [
+            this.cleanCSVValue(job.title || ''),
+            this.cleanCSVValue(job.company || ''),
+            this.cleanCSVValue(job.location || ''),
+            job.is_remote ? 'Yes' : 'No',
+            job.date_posted || '',
+            this.cleanCSVValue(job.description && job.description !== 'nan' ? job.description : ''),
+            job.job_url || ''
+        ]);
+
+        // Combine headers and rows
+        const allRows = [headers, ...rows];
+
+        // Convert to CSV format
+        return allRows.map(row =>
+            row.map(field => `"${field.replace(/"/g, '""')}"`).join(',')
+        ).join('\n');
+    }
+
+    cleanCSVValue(value) {
+        if (!value || value === 'nan') return '';
+
+        // Remove HTML tags and excessive whitespace
+        return value
+            .replace(/<[^>]*>/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    downloadCSV(csvContent, filename) {
+        // Create blob with CSV content
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+        // Create download link
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+
+        // Add to DOM, click, and remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up object URL
+        URL.revokeObjectURL(url);
     }
 }
 

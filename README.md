@@ -1,251 +1,243 @@
-# Career Catalyst FastAPI Application
+# Career Catalyst
 
-A comprehensive career management system built with FastAPI, featuring opportunity tracking, application management, and professional development tools.
+A comprehensive career management system built with FastAPI and MongoDB, featuring opportunity tracking, application management, and professional development tools.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- MongoDB (local or remote instance)
+- Python 3.8+
+- Docker and Docker Compose
+- Git
 
-### 1. Set Up Virtual Environment
-
-Create and activate a Python virtual environment:
+### 1. Clone and Setup
 
 ```bash
-# Using venv (recommended)
-python -m venv venv
-
-# Activate on Linux/macOS
-source venv/bin/activate
-
-# Activate on Windows
-venv\Scripts\activate
+git clone <repository-url>
+cd career-catalyst
 ```
 
-### 2. Install Dependencies
+### 2. Environment Configuration
+
+Copy the example environment file and configure your settings:
 
 ```bash
+cp .env.example .env
+```
+
+Edit the `.env` file with your configuration:
+
+```bash
+# MongoDB Configuration
+MONGODB_CONNECTION_STRING=mongodb://root:CareerCatalyst123!@localhost:27017
+MONGODB_DATABASE_NAME=career_catalyst
+MONGODB_TEST_DATABASE_NAME=career_catalyst_test
+
+# Application Configuration
+FLASK_ENV=development
+FLASK_DEBUG=True
+```
+
+### 3. Start MongoDB with Docker Compose
+
+Navigate to the docker compose directory and start MongoDB:
+
+```bash
+cd docker_compose
+docker-compose up -d
+```
+
+This will start MongoDB with:
+- **Port**: 27017
+- **Username**: root
+- **Password**: CareerCatalyst123!
+- **Data persistence**: Via Docker volume `mongodb_data`
+
+### 4. Install Python Dependencies
+
+```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 3. Environment Configuration
-
-Create a `.env` file in the project root with your configuration:
-
-```env
-# Database Configuration
-MONGODB_URL=mongodb://localhost:27017
-DATABASE_NAME=career_catalyst
-
-# API Configuration
-API_HOST=0.0.0.0
-API_PORT=8000
-DEBUG=True
-
-# Optional: Logging Configuration
-LOG_LEVEL=INFO
-```
-
-### 4. Start the Application
+### 5. Run the Application
 
 From the project root directory:
 
 ```bash
-# Option 1: Using the built-in runner
-python -c "from src.presentation.app import run_app; run_app()"
-
-# Option 2: Using uvicorn directly
-uvicorn src.presentation.app:app --host 0.0.0.0 --port 8000 --reload
-
-# Option 3: Using the main app.py (if available)
+# Run the FastAPI application
 python app.py
 ```
 
-The API will be available at:
-- **API Base URL**: http://localhost:8000
-- **Interactive API Docs**: http://localhost:8000/docs
-- **Alternative Docs**: http://localhost:8000/redoc
-- **Health Check**: http://localhost:8000/health
+The application will start on **http://localhost:8001**
 
 ## 📁 Project Structure
 
 ```
-src/
-├── presentation/           # FastAPI application layer
-│   ├── app.py             # Main FastAPI application
-│   ├── api/               # API route controllers
-│   │   └── user_opportunity_controller.py
-│   └── schemas/           # Pydantic request/response models
-├── application/           # Business logic layer
-│   └── services/          # Application services
-├── domain/               # Domain entities and business rules
-│   ├── entities/         # Domain entities
-│   ├── interfaces/       # Repository and service interfaces
-│   └── value_objects/    # Domain value objects
-└── infrastructure/       # Data access and external services
-    ├── container.py      # Dependency injection container
-    ├── database.py       # Database configuration
-    └── repositories/     # Data repository implementations
+career-catalyst/
+├── src/                          # Source code
+│   ├── presentation/            # FastAPI app and API routes
+│   │   ├── app.py              # Main FastAPI application
+│   │   └── api/                # API route handlers
+│   ├── application/            # Application services
+│   │   └── services/           # Business logic services
+│   ├── domain/                 # Domain entities and interfaces
+│   │   ├── entities/           # Domain entities
+│   │   ├── interfaces/         # Repository and service interfaces
+│   │   └── value_objects/      # Domain value objects
+│   └── infrastructure/         # Infrastructure layer
+│       ├── database.py         # MongoDB connection management
+│       ├── container.py        # Dependency injection
+│       └── repositories/       # Data access implementations
+├── tests/                      # Test suite
+├── docker_compose/             # Docker configuration
+│   └── docker-compose.yaml    # MongoDB service definition
+├── templates/                  # Frontend templates
+├── app.py                     # Application entry point
+└── requirements.txt           # Python dependencies
 ```
 
-## 🔧 API Endpoints
+## 🔧 Configuration
 
-### Core Endpoints
+### Environment Variables
 
-- `GET /` - Welcome message and API information
-- `GET /health` - Health check endpoint
-- `GET /docs` - Interactive API documentation
-- `GET /redoc` - Alternative API documentation
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MONGODB_CONNECTION_STRING` | MongoDB connection URI | `mongodb://localhost:27017` |
+| `MONGODB_DATABASE_NAME` | Main database name | `career_catalyst` |
+| `MONGODB_TEST_DATABASE_NAME` | Test database name | `career_catalyst_test` |
+| `FLASK_ENV` | Application environment | `development` |
+| `FLASK_DEBUG` | Enable debug mode | `True` |
 
-### User Opportunities Management
+### MongoDB Authentication
 
-- `POST /api/user-opportunities` - Create a new opportunity
-- `GET /api/user-opportunities` - List all opportunities with filtering
-- `GET /api/user-opportunities/{opportunity_id}` - Get specific opportunity
-- `PUT /api/user-opportunities/{opportunity_id}` - Update opportunity
-- `DELETE /api/user-opportunities/{opportunity_id}` - Delete opportunity
-- `POST /api/user-opportunities/search` - Search opportunities with advanced criteria
+The Docker Compose setup creates a MongoDB instance with authentication enabled:
 
-## 🗄️ Database Setup
+- **Root Username**: `root`
+- **Root Password**: `CareerCatalyst123!`
+- **Connection String**: `mongodb://root:CareerCatalyst123!@localhost:27017`
 
-The application uses MongoDB for data persistence. Ensure you have MongoDB running:
+## 🐳 Docker Services
 
-### Local MongoDB
+### MongoDB Service
+
+```yaml
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: CareerCatalyst123!
+    volumes:
+      - mongodb_data:/data/db
+```
+
+### Docker Commands
+
 ```bash
-# Install MongoDB (Ubuntu/Debian)
-sudo apt update
-sudo apt install mongodb
-
 # Start MongoDB service
-sudo systemctl start mongodb
-sudo systemctl enable mongodb
+cd docker_compose
+docker-compose up -d
+
+# View logs
+docker-compose logs -f mongodb
+
+# Stop services
+docker-compose down
+
+# Remove volumes (WARNING: This will delete all data)
+docker-compose down -v
 ```
 
-### Docker MongoDB
-```bash
-# Run MongoDB in Docker
-docker run -d --name mongodb -p 27017:27017 mongo:latest
-```
+## 🌐 API Endpoints
 
-### MongoDB Atlas (Cloud)
-Update your `.env` file with your Atlas connection string:
-```env
-MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/career_catalyst?retryWrites=true&w=majority
-```
+Once running, access:
 
-## 🧪 Testing
+- **Main Application**: http://localhost:8001/
+- **API Documentation**: http://localhost:8001/docs
+- **Alternative Docs**: http://localhost:8001/redoc
+- **Health Check**: http://localhost:8001/health
+- **API Info**: http://localhost:8001/api
 
-Run the application tests:
+## 🧪 Running Tests
 
 ```bash
 # Run all tests
 pytest
 
-# Run with coverage
-pytest --cov=src
+# Run with verbose output
+pytest -v
 
 # Run specific test files
-pytest tests/unit/application/
-pytest tests/unit/infrastructure/
+pytest tests/unit/
+pytest tests/integration/
+
+# Run tests with coverage
+pytest --cov=src
 ```
+
+## 📦 Key Dependencies
+
+- **FastAPI**: Modern, fast web framework for APIs
+- **Motor**: Async MongoDB driver for Python
+- **PyMongo**: MongoDB driver for Python
+- **Uvicorn**: ASGI server for FastAPI
+- **Pydantic**: Data validation using Python type annotations
+- **Python-dotenv**: Environment variable management
+- **Pytest**: Testing framework
 
 ## 🛠️ Development
 
-### Code Quality Tools
+### Running in Development Mode
 
-Install development dependencies:
+The application runs with auto-reload enabled by default when using `python app.py`.
+
+### Database Initialization
+
+The application automatically:
+1. Connects to MongoDB on startup
+2. Creates necessary indexes for optimal performance
+3. Handles connection errors gracefully
+
+### Adding New Dependencies
+
 ```bash
-pip install black isort flake8 mypy
+# Add to requirements.txt
+echo "new-package>=1.0.0" >> requirements.txt
+
+# Install the new package
+pip install -r requirements.txt
 ```
 
-Format and lint code:
-```bash
-# Format code
-black src/
-isort src/
-
-# Lint code
-flake8 src/
-mypy src/
-```
-
-### Hot Reload Development
-
-The application supports hot reload when running with `--reload` flag:
-```bash
-uvicorn src.presentation.app:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Any changes to the Python files will automatically restart the server.
-
-## 📊 Key Features
-
-- **Opportunity Management**: Create, update, and track job opportunities
-- **Application Tracking**: Monitor application status and progress
-- **Search & Filtering**: Advanced search capabilities with multiple criteria
-- **RESTful API**: Clean, well-documented REST endpoints
-- **Data Validation**: Robust request/response validation with Pydantic
-- **Error Handling**: Comprehensive error handling and logging
-- **CORS Support**: Cross-origin resource sharing enabled
-- **Health Monitoring**: Built-in health check endpoints
-
-## 🔍 API Usage Examples
-
-### Create a New Opportunity
-```bash
-curl -X POST "http://localhost:8000/api/user-opportunities" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Senior Software Engineer",
-    "company": "Tech Corp",
-    "location": "San Francisco, CA",
-    "salary_min": 120000,
-    "salary_max": 180000,
-    "opportunity_type": "full_time",
-    "status": "active"
-  }'
-```
-
-### Get All Opportunities
-```bash
-curl "http://localhost:8000/api/user-opportunities"
-```
-
-### Search Opportunities
-```bash
-curl -X POST "http://localhost:8000/api/user-opportunities/search" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Software Engineer",
-    "company": "Tech Corp",
-    "location": "San Francisco"
-  }'
-```
-
-## 🚨 Troubleshooting
+## 🔍 Troubleshooting
 
 ### Common Issues
 
-1. **Port Already in Use**: Change the port in the uvicorn command or kill the process using port 8000
-2. **Database Connection Failed**: Ensure MongoDB is running and the connection string is correct
-3. **Import Errors**: Make sure you're running from the project root and the virtual environment is activated
-4. **Module Not Found**: Install dependencies with `pip install -r requirements.txt`
+1. **MongoDB Connection Failed**
+   - Ensure MongoDB is running: `docker-compose ps`
+   - Check connection string in `.env` file
+   - Verify Docker service is healthy: `docker-compose logs mongodb`
+
+2. **Port Already in Use**
+   - Check if port 8001 is available: `lsof -i :8001`
+   - Change port in `src/presentation/app.py` if needed
+
+3. **Import Errors**
+   - Ensure you're running from the project root directory
+   - Verify all dependencies are installed: `pip install -r requirements.txt`
 
 ### Logs
 
-Check application logs for detailed error information. Logs are configured to show INFO level and above.
-
-## 📝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+Application logs are displayed in the console when running in development mode. For production deployment, configure appropriate log handlers.
 
 ## 📄 License
 
 [Add your license information here]
+
+## 🤝 Contributing
+
+[Add contribution guidelines here]
