@@ -3,6 +3,8 @@ class CareerCatalystApp {
     constructor() {
         this.apiBaseUrl = '/api/user-opportunities';
         this.jobSearchApiBaseUrl = '/api/job-search';
+        this.myDataApiBaseUrl = '/api/my-data';
+        this.coverLetterApiBaseUrl = '/api/cover-letter';
         this.currentUserId = 'demo-user-123'; // In production, this would come from authentication
         this.opportunities = [];
         this.jobSearchResults = [];
@@ -38,6 +40,12 @@ class CareerCatalystApp {
             this.exportJobSearchResults();
         });
 
+        // My Data form submission
+        document.getElementById('myDataForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveMyData();
+        });
+
         // Search functionality
         document.getElementById('searchKeywords').addEventListener('input',
             this.debounce(() => this.searchOpportunities(), 500));
@@ -45,6 +53,11 @@ class CareerCatalystApp {
         // Reset modal when it's closed
         document.getElementById('addOpportunityModal').addEventListener('hidden.bs.modal', () => {
             this.resetForm();
+        });
+
+        // Load My Data when the tab is shown
+        document.getElementById('my-data-tab').addEventListener('shown.bs.tab', () => {
+            this.loadMyData();
         });
     }
 
@@ -418,62 +431,179 @@ class CareerCatalystApp {
         this.currentViewingOpportunity = null;
     }
 
-    draftCoverLetter() {
+    async draftCoverLetter() {
         if (!this.currentViewingOpportunity) {
             this.showToast('Error', 'No opportunity selected for cover letter generation', 'error');
             return;
         }
 
-        // For now, show a placeholder functionality
-        // In a real implementation, this would integrate with AI/template services
-        const coverLetterContent = `Dear Hiring Manager,
+        try {
+            // Show loading state
+            this.showCoverLetterModal('', true);
 
-I am writing to express my strong interest in the ${this.currentViewingOpportunity.title} position at ${this.currentViewingOpportunity.company}.
+            // Make API call to generate cover letter
+            const response = await fetch(`${this.coverLetterApiBaseUrl}/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: this.currentUserId,
+                    opportunity_id: this.currentViewingOpportunity.id
+                })
+            });
 
-${this.currentViewingOpportunity.description ? 'Based on the job description, I believe my skills and experience align well with your requirements.' : ''}
+            const data = await response.json();
 
-${this.currentViewingOpportunity.requirements && this.currentViewingOpportunity.requirements.length > 0 ? `I am particularly excited about this opportunity because of my experience with: ${this.currentViewingOpportunity.requirements.slice(0, 3).join(', ')}.` : ''}
+            if (data.success) {
+                // Show the generated cover letter
+                this.showCoverLetterModal(data.cover_letter, false);
+                this.showToast('Success', 'AI-powered cover letter generated successfully!', 'success');
+            } else {
+                // Show error message
+                this.showCoverLetterModal('', false, data.message);
+                this.showToast('Error', data.message || 'Failed to generate cover letter', 'error');
+            }
 
-I would welcome the opportunity to discuss how my background and enthusiasm can contribute to your team's success.
+        } catch (error) {
+            console.error('Error generating cover letter:', error);
+            this.showCoverLetterModal('', false, 'Network error occurred while generating cover letter');
+            this.showToast('Error', 'Failed to generate cover letter', 'error');
+        }
+    }
 
-Thank you for considering my application.
+    showCoverLetterModal(content, isLoading = false, errorMessage = '') {
+        // Remove any existing modals
+        const existingModal = document.getElementById('coverLetterModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
 
-Best regards,
-[Your Name]`;
-
-        // Create a modal to show the cover letter draft
         const modal = document.createElement('div');
+        modal.id = 'coverLetterModal';
         modal.className = 'modal fade';
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Cover Letter Draft - ${this.escapeHtml(this.currentViewingOpportunity.title)}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <textarea class="form-control" rows="15" id="coverLetterText">${coverLetterContent}</textarea>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" onclick="app.copyCoverLetter()">
-                            <i class="bi bi-clipboard me-1"></i>Copy to Clipboard
-                        </button>
+
+        let modalContent;
+
+        if (isLoading) {
+            modalContent = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Generating Cover Letter - ${this.escapeHtml(this.currentViewingOpportunity.title)}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Generating...</span>
+                            </div>
+                            <p class="mt-3">AI is crafting your personalized cover letter...</p>
+                            <p class="text-muted">This may take a few seconds</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        } else if (errorMessage) {
+            modalContent = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Cover Letter Generation Failed</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Error:</strong> ${this.escapeHtml(errorMessage)}
+                            </div>
+                            <p>Please ensure:</p>
+                            <ul>
+                                <li>Your "My Data" is configured with at least Name and Resume</li>
+                                <li>Your API credentials are properly configured</li>
+                                <li>You have an active internet connection</li>
+                            </ul>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="app.showMyDataSection()">
+                                <i class="bi bi-person-gear me-1"></i>Configure My Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            modalContent = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-file-earmark-text me-2"></i>
+                                AI-Generated Cover Letter - ${this.escapeHtml(this.currentViewingOpportunity.title)}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info">
+                                <i class="bi bi-lightbulb me-2"></i>
+                                <strong>AI-Powered:</strong> This cover letter was generated using your personal data and the job requirements. Feel free to edit it to better match your style!
+                            </div>
+                            <textarea class="form-control" rows="20" id="coverLetterText">${content}</textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="app.copyCoverLetter()">
+                                <i class="bi bi-clipboard me-1"></i>Copy to Clipboard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
+        modal.innerHTML = modalContent;
         document.body.appendChild(modal);
         const bsModal = new bootstrap.Modal(modal);
+
+        // Add event listener to handle focus before modal closes
+        modal.addEventListener('hide.bs.modal', () => {
+            // Move focus away from any modal elements before hiding
+            if (document.activeElement && modal.contains(document.activeElement)) {
+                document.body.focus();
+            }
+        });
+
         bsModal.show();
 
         // Clean up when modal is closed
         modal.addEventListener('hidden.bs.modal', () => {
-            document.body.removeChild(modal);
-        });
+            // Return focus to the body or a safe element before cleanup
+            if (document.activeElement && modal.contains(document.activeElement)) {
+                document.body.focus();
+            }
 
-        this.showToast('Success', 'Cover letter draft generated! You can edit and copy it.', 'success');
+            // Remove the modal element from the DOM first
+            if (modal && modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+            // Then dispose of the Bootstrap modal instance
+            if (bsModal) {
+                bsModal.dispose();
+            }
+
+            // Ensure any remaining modal backdrops are removed
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                if (backdrop.parentNode) {
+                    backdrop.parentNode.removeChild(backdrop);
+                }
+            });
+
+            // Remove modal classes from body that might block interaction
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
     }
 
     copyCoverLetter() {
@@ -1093,6 +1223,102 @@ Best regards,
 
         // Clean up object URL
         URL.revokeObjectURL(url);
+    }
+
+    // My Data Methods
+    showMyDataSection() {
+        // Switch to the my data tab (this will trigger the shown.bs.tab event which loads data)
+        const myDataTab = document.getElementById('my-data-tab');
+        const tab = new bootstrap.Tab(myDataTab);
+        tab.show();
+    }
+
+    async loadMyData() {
+        try {
+            console.log('Loading my data from API:', `${this.myDataApiBaseUrl}/${this.currentUserId}`);
+            const response = await fetch(`${this.myDataApiBaseUrl}/${this.currentUserId}`);
+            console.log('API response status:', response.status);
+            const data = await response.json();
+            console.log('API response data:', data);
+
+            if (data.success && data.data) {
+                console.log('Populating form fields...');
+                // Populate form with loaded data from files (via API)
+                const nameField = document.getElementById('userName');
+                const resumeField = document.getElementById('userResume');
+                const goalsField = document.getElementById('userGoals');
+                const accomplishmentsField = document.getElementById('userAccomplishments');
+
+                console.log('Form fields found:', {
+                    nameField: !!nameField,
+                    resumeField: !!resumeField,
+                    goalsField: !!goalsField,
+                    accomplishmentsField: !!accomplishmentsField
+                });
+
+                if (nameField) nameField.value = data.data.name || '';
+                if (resumeField) resumeField.value = data.data.resume || '';
+                if (goalsField) goalsField.value = data.data.goals || '';
+                if (accomplishmentsField) accomplishmentsField.value = data.data.accomplishments || '';
+
+                console.log('Form populated with data');
+            } else if (response.status === 404) {
+                // No data found - this is normal for first time users
+                console.log('No existing data found');
+            } else {
+                console.log('API returned error:', data);
+                this.showToast('Error', 'Failed to load your data', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading my data:', error);
+            // Don't show error for network issues on initial load
+        }
+    }
+
+    async saveMyData() {
+        const name = document.getElementById('userName').value.trim();
+        const resume = document.getElementById('userResume').value.trim();
+        const goals = document.getElementById('userGoals').value.trim();
+        const accomplishments = document.getElementById('userAccomplishments').value.trim();
+
+        // Validation
+        if (!name) {
+            this.showToast('Validation Error', 'Name is required', 'error');
+            return;
+        }
+        if (!resume) {
+            this.showToast('Validation Error', 'Resume is required', 'error');
+            return;
+        }
+
+        const myData = {
+            user_id: this.currentUserId,
+            name,
+            resume,
+            goals: goals || null,
+            accomplishments: accomplishments || null
+        };
+
+        try {
+            const response = await fetch(`${this.myDataApiBaseUrl}/${this.currentUserId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(myData)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.showToast('Success', 'Your data has been saved successfully!', 'success');
+            } else {
+                this.showToast('Error', data.message || 'Failed to save your data', 'error');
+            }
+        } catch (error) {
+            console.error('Error saving my data:', error);
+            this.showToast('Error', 'Failed to save your data', 'error');
+        }
     }
 }
 
