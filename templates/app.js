@@ -54,6 +54,11 @@ class CareerCatalystApp {
         document.getElementById('addOpportunityModal').addEventListener('hidden.bs.modal', () => {
             this.resetForm();
         });
+
+        // Load My Data when the tab is shown
+        document.getElementById('my-data-tab').addEventListener('shown.bs.tab', () => {
+            this.loadMyData();
+        });
     }
 
     debounce(func, wait) {
@@ -559,16 +564,45 @@ class CareerCatalystApp {
         modal.innerHTML = modalContent;
         document.body.appendChild(modal);
         const bsModal = new bootstrap.Modal(modal);
+
+        // Add event listener to handle focus before modal closes
+        modal.addEventListener('hide.bs.modal', () => {
+            // Move focus away from any modal elements before hiding
+            if (document.activeElement && modal.contains(document.activeElement)) {
+                document.body.focus();
+            }
+        });
+
         bsModal.show();
 
         // Clean up when modal is closed
         modal.addEventListener('hidden.bs.modal', () => {
-            // Properly dispose of the Bootstrap modal instance
-            bsModal.dispose();
-            // Remove the modal element from the DOM
-            if (modal.parentNode) {
-                document.body.removeChild(modal);
+            // Return focus to the body or a safe element before cleanup
+            if (document.activeElement && modal.contains(document.activeElement)) {
+                document.body.focus();
             }
+
+            // Remove the modal element from the DOM first
+            if (modal && modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+            // Then dispose of the Bootstrap modal instance
+            if (bsModal) {
+                bsModal.dispose();
+            }
+
+            // Ensure any remaining modal backdrops are removed
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                if (backdrop.parentNode) {
+                    backdrop.parentNode.removeChild(backdrop);
+                }
+            });
+
+            // Remove modal classes from body that might block interaction
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
         });
     }
 
@@ -1193,30 +1227,46 @@ class CareerCatalystApp {
 
     // My Data Methods
     showMyDataSection() {
-        // Switch to the my data tab
+        // Switch to the my data tab (this will trigger the shown.bs.tab event which loads data)
         const myDataTab = document.getElementById('my-data-tab');
         const tab = new bootstrap.Tab(myDataTab);
         tab.show();
-
-        // Load existing data
-        this.loadMyData();
     }
 
     async loadMyData() {
         try {
+            console.log('Loading my data from API:', `${this.myDataApiBaseUrl}/${this.currentUserId}`);
             const response = await fetch(`${this.myDataApiBaseUrl}/${this.currentUserId}`);
+            console.log('API response status:', response.status);
             const data = await response.json();
+            console.log('API response data:', data);
 
             if (data.success && data.data) {
-                // Populate form with loaded data
-                document.getElementById('userName').value = data.data.name || '';
-                document.getElementById('userResume').value = data.data.resume || '';
-                document.getElementById('userGoals').value = data.data.goals || '';
-                document.getElementById('userAccomplishments').value = data.data.accomplishments || '';
+                console.log('Populating form fields...');
+                // Populate form with loaded data from files (via API)
+                const nameField = document.getElementById('userName');
+                const resumeField = document.getElementById('userResume');
+                const goalsField = document.getElementById('userGoals');
+                const accomplishmentsField = document.getElementById('userAccomplishments');
+
+                console.log('Form fields found:', {
+                    nameField: !!nameField,
+                    resumeField: !!resumeField,
+                    goalsField: !!goalsField,
+                    accomplishmentsField: !!accomplishmentsField
+                });
+
+                if (nameField) nameField.value = data.data.name || '';
+                if (resumeField) resumeField.value = data.data.resume || '';
+                if (goalsField) goalsField.value = data.data.goals || '';
+                if (accomplishmentsField) accomplishmentsField.value = data.data.accomplishments || '';
+
+                console.log('Form populated with data');
             } else if (response.status === 404) {
                 // No data found - this is normal for first time users
                 console.log('No existing data found');
             } else {
+                console.log('API returned error:', data);
                 this.showToast('Error', 'Failed to load your data', 'error');
             }
         } catch (error) {
