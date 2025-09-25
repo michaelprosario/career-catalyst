@@ -4,6 +4,7 @@ class CareerCatalystApp {
         this.apiBaseUrl = '/api/user-opportunities';
         this.jobSearchApiBaseUrl = '/api/job-search';
         this.myDataApiBaseUrl = '/api/my-data';
+        this.coverLetterApiBaseUrl = '/api/cover-letter';
         this.currentUserId = 'demo-user-123'; // In production, this would come from authentication
         this.opportunities = [];
         this.jobSearchResults = [];
@@ -425,62 +426,150 @@ class CareerCatalystApp {
         this.currentViewingOpportunity = null;
     }
 
-    draftCoverLetter() {
+    async draftCoverLetter() {
         if (!this.currentViewingOpportunity) {
             this.showToast('Error', 'No opportunity selected for cover letter generation', 'error');
             return;
         }
 
-        // For now, show a placeholder functionality
-        // In a real implementation, this would integrate with AI/template services
-        const coverLetterContent = `Dear Hiring Manager,
+        try {
+            // Show loading state
+            this.showCoverLetterModal('', true);
 
-I am writing to express my strong interest in the ${this.currentViewingOpportunity.title} position at ${this.currentViewingOpportunity.company}.
+            // Make API call to generate cover letter
+            const response = await fetch(`${this.coverLetterApiBaseUrl}/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: this.currentUserId,
+                    opportunity_id: this.currentViewingOpportunity.id
+                })
+            });
 
-${this.currentViewingOpportunity.description ? 'Based on the job description, I believe my skills and experience align well with your requirements.' : ''}
+            const data = await response.json();
 
-${this.currentViewingOpportunity.requirements && this.currentViewingOpportunity.requirements.length > 0 ? `I am particularly excited about this opportunity because of my experience with: ${this.currentViewingOpportunity.requirements.slice(0, 3).join(', ')}.` : ''}
+            if (data.success) {
+                // Show the generated cover letter
+                this.showCoverLetterModal(data.cover_letter, false);
+                this.showToast('Success', 'AI-powered cover letter generated successfully!', 'success');
+            } else {
+                // Show error message
+                this.showCoverLetterModal('', false, data.message);
+                this.showToast('Error', data.message || 'Failed to generate cover letter', 'error');
+            }
 
-I would welcome the opportunity to discuss how my background and enthusiasm can contribute to your team's success.
+        } catch (error) {
+            console.error('Error generating cover letter:', error);
+            this.showCoverLetterModal('', false, 'Network error occurred while generating cover letter');
+            this.showToast('Error', 'Failed to generate cover letter', 'error');
+        }
+    }
 
-Thank you for considering my application.
+    showCoverLetterModal(content, isLoading = false, errorMessage = '') {
+        // Remove any existing modals
+        const existingModal = document.getElementById('coverLetterModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
 
-Best regards,
-[Your Name]`;
-
-        // Create a modal to show the cover letter draft
         const modal = document.createElement('div');
+        modal.id = 'coverLetterModal';
         modal.className = 'modal fade';
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Cover Letter Draft - ${this.escapeHtml(this.currentViewingOpportunity.title)}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <textarea class="form-control" rows="15" id="coverLetterText">${coverLetterContent}</textarea>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" onclick="app.copyCoverLetter()">
-                            <i class="bi bi-clipboard me-1"></i>Copy to Clipboard
-                        </button>
+
+        let modalContent;
+
+        if (isLoading) {
+            modalContent = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Generating Cover Letter - ${this.escapeHtml(this.currentViewingOpportunity.title)}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Generating...</span>
+                            </div>
+                            <p class="mt-3">AI is crafting your personalized cover letter...</p>
+                            <p class="text-muted">This may take a few seconds</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        } else if (errorMessage) {
+            modalContent = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Cover Letter Generation Failed</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Error:</strong> ${this.escapeHtml(errorMessage)}
+                            </div>
+                            <p>Please ensure:</p>
+                            <ul>
+                                <li>Your "My Data" is configured with at least Name and Resume</li>
+                                <li>Your API credentials are properly configured</li>
+                                <li>You have an active internet connection</li>
+                            </ul>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="app.showMyDataSection()">
+                                <i class="bi bi-person-gear me-1"></i>Configure My Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            modalContent = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-file-earmark-text me-2"></i>
+                                AI-Generated Cover Letter - ${this.escapeHtml(this.currentViewingOpportunity.title)}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info">
+                                <i class="bi bi-lightbulb me-2"></i>
+                                <strong>AI-Powered:</strong> This cover letter was generated using your personal data and the job requirements. Feel free to edit it to better match your style!
+                            </div>
+                            <textarea class="form-control" rows="20" id="coverLetterText">${content}</textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="app.copyCoverLetter()">
+                                <i class="bi bi-clipboard me-1"></i>Copy to Clipboard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
+        modal.innerHTML = modalContent;
         document.body.appendChild(modal);
         const bsModal = new bootstrap.Modal(modal);
         bsModal.show();
 
         // Clean up when modal is closed
         modal.addEventListener('hidden.bs.modal', () => {
-            document.body.removeChild(modal);
+            // Properly dispose of the Bootstrap modal instance
+            bsModal.dispose();
+            // Remove the modal element from the DOM
+            if (modal.parentNode) {
+                document.body.removeChild(modal);
+            }
         });
-
-        this.showToast('Success', 'Cover letter draft generated! You can edit and copy it.', 'success');
     }
 
     copyCoverLetter() {

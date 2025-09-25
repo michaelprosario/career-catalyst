@@ -2,13 +2,14 @@
 Dependency injection container for infrastructure components.
 Infrastructure layer - manages object creation and dependencies.
 """
-import os
 from typing import Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from .database import MongoDBConnection, DatabaseConfig
 from .repositories.mongo_user_opportunity_repository import MongoUserOpportunityRepository
 from ..application.services.opportunity_management_service import UserOpportunityManagementService
+from ..application.services.cover_letter_writer_service import WriteCoverLetterService
+from .gemini_cover_letter_writer import GeminiCoverLetterWriterProvider
 
 
 class InfrastructureContainer:
@@ -18,6 +19,7 @@ class InfrastructureContainer:
         self._database: Optional[AsyncIOMotorDatabase] = None
         self._user_opportunity_repository: Optional[MongoUserOpportunityRepository] = None
         self._user_opportunity_management_service: Optional[UserOpportunityManagementService] = None
+        self._cover_letter_service: Optional[WriteCoverLetterService] = None
         self._config = DatabaseConfig()
     
     async def get_database(self) -> AsyncIOMotorDatabase:
@@ -52,6 +54,14 @@ class InfrastructureContainer:
     async def get_opportunity_management_service(self) -> UserOpportunityManagementService:
         """Get opportunity management service (alias for get_user_opportunity_management_service)."""
         return await self.get_user_opportunity_management_service()
+
+    async def get_cover_letter_service(self) -> WriteCoverLetterService:
+        """Get cover letter writer service (singleton)."""
+        if self._cover_letter_service is None:
+            # Initialize the Gemini provider
+            gemini_provider = GeminiCoverLetterWriterProvider()
+            self._cover_letter_service = WriteCoverLetterService(gemini_provider)
+        return self._cover_letter_service
     
     async def cleanup(self) -> None:
         """Clean up resources."""
@@ -61,6 +71,7 @@ class InfrastructureContainer:
             self._database = None
             self._user_opportunity_repository = None
             self._user_opportunity_management_service = None
+            self._cover_letter_service = None
 
 
 # Global container instance
