@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-from .api import user_opportunity_router, job_search_router
+from .api import user_opportunity_router, job_search_router, my_data_router
 from ..infrastructure.container import get_container, cleanup_container
 
 
@@ -78,6 +78,7 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(user_opportunity_router)
     app.include_router(job_search_router)
+    app.include_router(my_data_router)
 
     # Frontend route
     @app.get("/")

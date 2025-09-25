@@ -3,6 +3,7 @@ class CareerCatalystApp {
     constructor() {
         this.apiBaseUrl = '/api/user-opportunities';
         this.jobSearchApiBaseUrl = '/api/job-search';
+        this.myDataApiBaseUrl = '/api/my-data';
         this.currentUserId = 'demo-user-123'; // In production, this would come from authentication
         this.opportunities = [];
         this.jobSearchResults = [];
@@ -36,6 +37,12 @@ class CareerCatalystApp {
         // Export jobs button
         document.getElementById('exportJobsBtn').addEventListener('click', () => {
             this.exportJobSearchResults();
+        });
+
+        // My Data form submission
+        document.getElementById('myDataForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveMyData();
         });
 
         // Search functionality
@@ -1093,6 +1100,86 @@ Best regards,
 
         // Clean up object URL
         URL.revokeObjectURL(url);
+    }
+
+    // My Data Methods
+    showMyDataSection() {
+        // Switch to the my data tab
+        const myDataTab = document.getElementById('my-data-tab');
+        const tab = new bootstrap.Tab(myDataTab);
+        tab.show();
+
+        // Load existing data
+        this.loadMyData();
+    }
+
+    async loadMyData() {
+        try {
+            const response = await fetch(`${this.myDataApiBaseUrl}/${this.currentUserId}`);
+            const data = await response.json();
+
+            if (data.success && data.data) {
+                // Populate form with loaded data
+                document.getElementById('userName').value = data.data.name || '';
+                document.getElementById('userResume').value = data.data.resume || '';
+                document.getElementById('userGoals').value = data.data.goals || '';
+                document.getElementById('userAccomplishments').value = data.data.accomplishments || '';
+            } else if (response.status === 404) {
+                // No data found - this is normal for first time users
+                console.log('No existing data found');
+            } else {
+                this.showToast('Error', 'Failed to load your data', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading my data:', error);
+            // Don't show error for network issues on initial load
+        }
+    }
+
+    async saveMyData() {
+        const name = document.getElementById('userName').value.trim();
+        const resume = document.getElementById('userResume').value.trim();
+        const goals = document.getElementById('userGoals').value.trim();
+        const accomplishments = document.getElementById('userAccomplishments').value.trim();
+
+        // Validation
+        if (!name) {
+            this.showToast('Validation Error', 'Name is required', 'error');
+            return;
+        }
+        if (!resume) {
+            this.showToast('Validation Error', 'Resume is required', 'error');
+            return;
+        }
+
+        const myData = {
+            user_id: this.currentUserId,
+            name,
+            resume,
+            goals: goals || null,
+            accomplishments: accomplishments || null
+        };
+
+        try {
+            const response = await fetch(`${this.myDataApiBaseUrl}/${this.currentUserId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(myData)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.showToast('Success', 'Your data has been saved successfully!', 'success');
+            } else {
+                this.showToast('Error', data.message || 'Failed to save your data', 'error');
+            }
+        } catch (error) {
+            console.error('Error saving my data:', error);
+            this.showToast('Error', 'Failed to save your data', 'error');
+        }
     }
 }
 

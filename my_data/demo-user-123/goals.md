@@ -1,0 +1,2 @@
+- wants to learn more test automation
+- wants to explore entry level developer work
