@@ -998,7 +998,7 @@ class CareerCatalystApp {
             this.truncateText(job.description, 150) : 'No description available';
 
         return `
-            <div class="col-md-6">
+            <div class="col-12 col-lg-6">
                 <div class="card job-result-card h-100">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -1105,7 +1105,7 @@ class CareerCatalystApp {
             noResults.style.display = 'none';
         } else {
             loading.style.display = 'none';
-            resultsList.style.display = 'block';
+            resultsList.style.display = 'flex';
         }
     }
 
@@ -1118,7 +1118,7 @@ class CareerCatalystApp {
             resultsList.style.display = 'none';
         } else {
             noResults.style.display = 'none';
-            resultsList.style.display = 'block';
+            resultsList.style.display = 'flex';
         }
     }
 

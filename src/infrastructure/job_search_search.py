@@ -19,7 +19,8 @@ class JobSearchService:
             location=query.location,
             results_wanted=query.results_wanted,
             hours_old=72,
-            country_indeed='USA'    
+            country_indeed='USA'
+            is_remote=True    
         )
 
         return jobs
