@@ -236,8 +236,22 @@ Application logs are displayed in the console when running in development mode. 
 
 ## 📄 License
 
-[Add your license information here]
+MIT License
 
-## 🤝 Contributing
+## 🤝 Ideas for next features
+- At the present time, we want to optimize this tool for local usage by developers
+- Add page with helpful links and youtube videos to optimize and automate your job search
+- Integrate resume scanning tool to maximize chances of review
+- Generative tool to optimize resume for particular gig
+- What can we automate?
 
-[Add contribution guidelines here]
+## DevFest GemJam - Oct 25
+
+https://www.youtube.com/watch?v=Gou_5qTPzwI
+
+DevFests are local tech conferences hosted by Google Developers Groups (GDG) around the world. Each DevFest event is crafted by its local organizers to fit the needs and interests of its local developer community. Whether it be through hands-on learning experiences, technical talks delivered in local languages by experts, or by simply meeting fellow local developers, DevFest attendees learn how to build together and innovate on Google's developer tools.
+
+Get Tickets to DevFest Florida today!
+https://www.eventbrite.com/e/devfest-gemjam-tickets-1032640023107?aff=oddtdtcreator
+
+
